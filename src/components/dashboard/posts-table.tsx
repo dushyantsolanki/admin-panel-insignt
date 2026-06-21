@@ -49,6 +49,8 @@ import {
   MoreVertical,
   ExternalLink,
   Loader2,
+  Clock,
+  BookOpen,
 } from "lucide-react";
 import { useDashboardStore } from "@/store/dashboard-store";
 import { Pill, PillAvatar, PillIndicator, PillIcon } from "@/components/kibo-ui/pill";
@@ -69,7 +71,9 @@ interface Post {
   isHero: boolean;
   isFeatured: boolean;
   date: string;
-  videoUrl: string
+  videoUrl: string;
+  avgTime?: string;
+  completionRate?: number;
 }
 
 function StatusBadge({ status }: { status: PostStatus }) {
@@ -309,12 +313,29 @@ export function PostsTable() {
       {
         accessorKey: "views",
         header: "Performance",
-        cell: ({ row }) => (
-          <div className="flex items-center gap-1.5 text-sm font-medium tabular-nums">
-            <Eye className="size-3.5 text-muted-foreground" />
-            {(row.original.views || 0).toLocaleString()}
-          </div>
-        ),
+        cell: ({ row }) => {
+          const p = row.original;
+          return (
+            <div className="flex flex-col gap-1 py-1">
+              <div className="flex items-center gap-1.5 text-sm font-semibold tabular-nums text-foreground">
+                <Eye className="size-3.5 text-muted-foreground" />
+                <span>{(p.views || 0).toLocaleString()}</span>
+              </div>
+              {p.avgTime && p.avgTime !== "0:00m" && (
+                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground tabular-nums">
+                  <Clock className="size-3 text-muted-foreground/75" />
+                  <span>{p.avgTime} avg</span>
+                </div>
+              )}
+              {p.completionRate !== undefined && p.completionRate > 0 && (
+                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground tabular-nums">
+                  <BookOpen className="size-3 text-muted-foreground/75" />
+                  <span>{p.completionRate}% read</span>
+                </div>
+              )}
+            </div>
+          );
+        },
       },
       {
         accessorKey: "author",

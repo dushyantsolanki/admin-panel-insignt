@@ -3,6 +3,7 @@ import connectDB from "@/lib/db";
 import Post from "@/models/post";
 import Author from "@/models/author";
 import Category from "@/models/category";
+import AnalyticsEvent from "@/models/analytics";
 import { verifyToken } from "@/lib/jwt";
 
 export async function GET(req: NextRequest) {
@@ -85,8 +86,36 @@ export async function GET(req: NextRequest) {
       .skip(skip)
       .limit(limit);
 
+    const slugs = posts.map(p => p.slug);
+    const analytics = await AnalyticsEvent.aggregate([
+      { $match: { postSlug: { $in: slugs } } },
+      {
+        $group: {
+          _id: "$postSlug",
+          views: { $sum: 1 },
+          avgTime: { $avg: "$timeOnPage" },
+          completions: {
+            $sum: { $cond: [{ $eq: ["$completedRead", true] }, 1, 0] }
+          }
+        }
+      }
+    ]);
+
+    const analyticsMap = new Map(analytics.map(a => [a._id, a]));
+
+    const postsWithStats = posts.map(post => {
+      const postObj = post.toObject();
+      const stats = analyticsMap.get(post.slug);
+      return {
+        ...postObj,
+        views: stats ? stats.views : (post.views || 0),
+        avgTime: stats ? `${Math.floor(stats.avgTime / 60)}:${Math.round(stats.avgTime % 60).toString().padStart(2, "0")}m` : "0:00m",
+        completionRate: stats && stats.views > 0 ? Math.round((stats.completions / stats.views) * 100) : 0
+      };
+    });
+
     return NextResponse.json({
-      posts,
+      posts: postsWithStats,
       pagination: {
         totalPosts,
         totalPages,
