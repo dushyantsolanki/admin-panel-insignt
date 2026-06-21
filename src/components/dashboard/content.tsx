@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Plus } from "@/components/icons";
 import { welcomeSummary } from "@/mock-data/dashboard";
 import { StatsCards } from "./stats-cards";
-import { RecentComments } from "./recent-comments";
+import { AnalyticsHighlight } from "./analytics-highlight";
 import { PerformanceChart } from "./performance-chart";
 import { PostsTable } from "./posts-table";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -53,7 +53,7 @@ export function DashboardContent() {
           <PerformanceChart />
         </div>
         <div className="lg:col-span-1">
-          <RecentComments />
+          <AnalyticsHighlight />
         </div>
       </div>
 
