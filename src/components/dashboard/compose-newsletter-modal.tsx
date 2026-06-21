@@ -116,7 +116,7 @@ export function ComposeNewsletterModal({ isOpen, onClose }: ComposeNewsletterMod
   const getPreviewHtml = () => {
     const defaultBody = "<p style='color: #64748b; font-style: italic;'>Your newsletter content will render here. Supports HTML formatting.</p>";
     const parsedContent = content || defaultBody;
-    
+
     return `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb; color: #1f2937; margin: 0; padding: 20px;">
         <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb;">
@@ -129,7 +129,7 @@ export function ComposeNewsletterModal({ isOpen, onClose }: ComposeNewsletterMod
           <div style="background-color: #f3f4f6; padding: 20px; text-align: center; font-size: 11px; color: #6b7280; border-top: 1px solid #e5e7eb;">
             <p style="margin: 0 0 8px 0;">You received this email because you subscribed to our newsletter.</p>
             <p style="margin: 0;">
-              <a href="#" style="color: #4f46e5; text-decoration: underline;">Unsubscribe</a> from this list at any time.
+              <p style="color: #4f46e5; text-decoration: underline;">Unsubscribe</p> from this list at any time.
             </p>
           </div>
         </div>
@@ -147,11 +147,10 @@ export function ComposeNewsletterModal({ isOpen, onClose }: ComposeNewsletterMod
               <button
                 type="button"
                 onClick={() => setActiveTab("edit")}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-md font-medium transition-all ${
-                  activeTab === "edit"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-md font-medium transition-all ${activeTab === "edit"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+                  }`}
               >
                 <Edit3 className="size-3.5" />
                 Write
@@ -159,11 +158,10 @@ export function ComposeNewsletterModal({ isOpen, onClose }: ComposeNewsletterMod
               <button
                 type="button"
                 onClick={() => setActiveTab("preview")}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-md font-medium transition-all ${
-                  activeTab === "preview"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-md font-medium transition-all ${activeTab === "preview"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+                  }`}
               >
                 <Eye className="size-3.5" />
                 Preview
