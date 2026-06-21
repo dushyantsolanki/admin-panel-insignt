@@ -188,10 +188,10 @@ export function PerformanceChart() {
                       dataKey="day"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
+                      tick={{ fontSize: 12, fontWeight: 500 }}
                       dy={10}
                     />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
                     <ChartTooltip cursor={{ fill: "hsl(var(--muted) / 0.5)" }} content={<ChartTooltipContent />} />
                     <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={35}>
                       {data.map((entry, index) => (
@@ -217,10 +217,10 @@ export function PerformanceChart() {
                       dataKey="day"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
+                      tick={{ fontSize: 12, fontWeight: 500 }}
                       dy={10}
                     />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Area
                       type={smoothCurve ? "monotone" : "linear"}
@@ -238,10 +238,10 @@ export function PerformanceChart() {
                       dataKey="day"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
+                      tick={{ fontSize: 12, fontWeight: 500 }}
                       dy={10}
                     />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Line
                       type={smoothCurve ? "monotone" : "linear"}

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  Sparkles, 
-  Eye, 
-  Clock, 
-  BookOpen, 
-  ArrowUpRight, 
+import {
+  Sparkles,
+  Eye,
+  Clock,
+  BookOpen,
+  ArrowUpRight,
   Award,
   TrendingUp,
   Flame,
@@ -105,16 +105,16 @@ export function AnalyticsHighlight() {
                 <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                   <Award className="size-16 text-primary" />
                 </div>
-                
+
                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary uppercase tracking-wider mb-2">
-                  <Flame className="size-3.5 fill-primary text-primary" />
+                  <Flame className="size-3.5 fill-primary text-orange-400 " />
                   Top Overall Performer
                 </div>
-                
+
                 <h4 className="font-bold text-base text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-1">
                   {topPost.title}
                 </h4>
-                
+
                 <p className="text-xs text-muted-foreground mt-0.5 mb-3">
                   by {topPost.author} • <span className="italic">{topPost.category}</span>
                 </p>
@@ -150,7 +150,7 @@ export function AnalyticsHighlight() {
                     <span className="font-semibold text-foreground">{topPost.completionRate}%</span>
                   </div>
                   <div className="w-full bg-muted/60 rounded-full h-2 overflow-hidden">
-                    <div 
+                    <div
                       className="bg-gradient-to-r from-primary to-primary/80 h-full rounded-full transition-all duration-1000 ease-out"
                       style={{ width: `${topPost.completionRate}%` }}
                     />
@@ -158,7 +158,7 @@ export function AnalyticsHighlight() {
                 </div>
 
                 <div className="mt-3 flex justify-end">
-                  <NextLink 
+                  <NextLink
                     href={`/blog/${topPost.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -176,11 +176,11 @@ export function AnalyticsHighlight() {
                 <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">
                   Top Performing Contenders
                 </h5>
-                
+
                 <div className="divide-y divide-border/50">
-                  {remainingPosts.map((post, index) => (
-                    <div 
-                      key={post.id} 
+                  {remainingPosts?.slice(0, 2)?.map((post, index) => (
+                    <div
+                      key={post.id}
                       className="py-2.5 flex items-center justify-between gap-4 group/item hover:bg-muted/10 px-1 rounded-md transition-colors"
                     >
                       <div className="flex items-start gap-2.5 min-w-0 flex-1">
@@ -210,10 +210,10 @@ export function AnalyticsHighlight() {
                             {post.completionRate}% read • {post.avgTime}
                           </p>
                         </div>
-                        
-                        <NextLink 
-                          href={`/blog/${post.slug}`} 
-                          target="_blank" 
+
+                        <NextLink
+                          href={`/blog/${post.slug}`}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="size-7 rounded-md border flex items-center justify-center hover:bg-primary/5 hover:text-primary hover:border-primary/20 transition-all opacity-0 group-hover/item:opacity-100"
                         >
