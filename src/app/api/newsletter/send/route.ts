@@ -26,9 +26,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Subject and content are required" }, { status: 400 });
     }
 
-    // Determine unsubscribe URL base
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
-    const unsubscribeBaseUrl = `${apiUrl}/subscribers/unsubscribe`;
+    // Determine unsubscribe URL base dynamically from request origin
+    const origin = req.nextUrl.origin;
+    const unsubscribeBaseUrl = `${origin}/api/subscribers/unsubscribe`;
     const transporter = getTransporter();
 
     // Check if it's a test email dispatch
