@@ -49,5 +49,6 @@ import "@/models/author";
 import "@/models/category";
 import "@/models/post";
 import "@/models/message";
+import "@/models/analytics";
 
 export default connectDB;

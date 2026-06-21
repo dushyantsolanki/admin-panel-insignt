@@ -79,7 +79,7 @@ function RoleBadge({ role }: { role: AuthorRole }) {
 
   return (
     <Pill className={cn("capitalize", variantMap[role])}>
-      <PillIcon icon={iconMap[role]} />
+      <PillIcon icon={iconMap[role] || UserIcon} />
       {role}
     </Pill>
   );

@@ -602,8 +602,9 @@ export const EditorProvider = ({
     Subscript,
     Slash.configure({
       suggestion: {
-        items: async ({ editor, query }) => {
-          const items = await defaultSlashSuggestions({ editor, query });
+        items: async (props) => {
+          const { query } = props;
+          const items = await defaultSlashSuggestions(props);
 
           if (!query) {
             return items;

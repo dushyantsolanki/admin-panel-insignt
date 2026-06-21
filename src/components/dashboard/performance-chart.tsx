@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,10 +13,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, ChevronUp } from "@/components/icons";
-import {
-  performanceChartData,
-} from "@/mock-data/dashboard";
+import { MoreVertical, ChevronUp, ChevronDown } from "@/components/icons";
 import {
   ChartContainer,
   ChartTooltip,
@@ -35,6 +32,7 @@ import {
   Area,
   AreaChart,
 } from "recharts";
+import { cn } from "@/lib/utils";
 
 type ChartType = "bar" | "line" | "area";
 type Period = "7d" | "30d";
@@ -51,6 +49,9 @@ export function PerformanceChart() {
   const [period, setPeriod] = useState<Period>("7d");
   const [showGrid, setShowGrid] = useState(true);
   const [smoothCurve, setSmoothCurve] = useState(true);
+  const [data, setData] = useState<{ day: string; value: number }[]>([]);
+  const [viewsStats, setViewsStats] = useState({ total: "0", change: 0 });
+  const [isLoading, setIsLoading] = useState(true);
 
   const resetToDefault = () => {
     setChartType("bar");
@@ -59,8 +60,32 @@ export function PerformanceChart() {
     setSmoothCurve(true);
   };
 
-  const data = performanceChartData;
-  const maxVal = Math.max(...data.map(d => d.value));
+  useEffect(() => {
+    async function fetchChartData() {
+      setIsLoading(true);
+      try {
+        const res = await fetch(`/api/analytics?period=${period}`);
+        const json = await res.json();
+        if (json.performanceChartData) {
+          setData(json.performanceChartData);
+        }
+        if (json.stats) {
+          setViewsStats({
+            total: json.stats.monthlyViews.value,
+            change: json.stats.monthlyViews.change,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching performance chart data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchChartData();
+  }, [period]);
+
+  const maxVal = data.length > 0 ? Math.max(...data.map(d => d.value)) : 0;
+  const totalViewsThisPeriod = data.reduce((acc, curr) => acc + curr.value, 0);
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden h-full flex flex-col shadow-sm">
@@ -124,100 +149,113 @@ export function PerformanceChart() {
       <div className="p-4 flex-1 flex flex-col">
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold tracking-tight">128.4K</span>
-            <div className="flex items-center gap-1 text-emerald-500 font-medium text-sm">
-              <ChevronUp className="size-3" />
-              5.2%
-            </div>
+            <span className="text-3xl font-bold tracking-tight">
+              {isLoading ? "..." : totalViewsThisPeriod.toLocaleString()}
+            </span>
+            {!isLoading && (
+              <div className={cn(
+                "flex items-center gap-1 font-medium text-sm",
+                viewsStats.change >= 0 ? "text-emerald-500" : "text-rose-500"
+              )}>
+                {viewsStats.change >= 0 ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
+                {Math.abs(viewsStats.change)}%
+              </div>
+            )}
           </div>
           <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold bg-muted/50 px-2 py-1 rounded">
-            Overall Score: 86
+            {period === "7d" ? "Last 7 Days" : "Last 30 Days"}
           </div>
         </div>
 
         <div className="flex-1 w-full h-full min-h-[220px]">
-          <ChartContainer config={chartConfig} className="h-full w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              {chartType === "bar" ? (
-                <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={1} />
-                      <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.6} />
-                    </linearGradient>
-                  </defs>
-                  {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />}
-                  <XAxis
-                    dataKey="day"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
-                    dy={10}
-                  />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
-                  <ChartTooltip cursor={{ fill: "hsl(var(--muted) / 0.5)" }} content={<ChartTooltipContent />} />
-                  <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={35}>
-                    {data.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={entry.value === maxVal ? "url(#barGradient)" : "var(--chart-1)"}
-                        fillOpacity={entry.value === maxVal ? 1 : 0.15}
-                        className="transition-all hover:opacity-80"
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              ) : chartType === "area" ? (
-                <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />}
-                  <XAxis
-                    dataKey="day"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
-                    dy={10}
-                  />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Area
-                    type={smoothCurve ? "monotone" : "linear"}
-                    dataKey="value"
-                    stroke="var(--chart-1)"
-                    strokeWidth={3}
-                    fillOpacity={1}
-                    fill="url(#areaGradient)"
-                  />
-                </AreaChart>
-              ) : (
-                <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />}
-                  <XAxis
-                    dataKey="day"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
-                    dy={10}
-                  />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line
-                    type={smoothCurve ? "monotone" : "linear"}
-                    dataKey="value"
-                    stroke="var(--chart-1)"
-                    strokeWidth={3}
-                    dot={{ r: 4, fill: "hsl(var(--card))", stroke: "var(--chart-1)", strokeWidth: 2 }}
-                    activeDot={{ r: 6, fill: "var(--chart-1)", stroke: "hsl(var(--card))", strokeWidth: 2 }}
-                  />
-                </LineChart>
-              )}
-            </ResponsiveContainer>
-          </ChartContainer>
+          {isLoading ? (
+            <div className="h-full w-full flex items-center justify-center bg-muted/10 rounded-lg animate-pulse">
+              <span className="text-xs text-muted-foreground">Loading chart data...</span>
+            </div>
+          ) : (
+            <ChartContainer config={chartConfig} className="h-full w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                {chartType === "bar" ? (
+                  <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={1} />
+                        <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.6} />
+                      </linearGradient>
+                    </defs>
+                    {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />}
+                    <XAxis
+                      dataKey="day"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
+                      dy={10}
+                    />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                    <ChartTooltip cursor={{ fill: "hsl(var(--muted) / 0.5)" }} content={<ChartTooltipContent />} />
+                    <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={35}>
+                      {data.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={entry.value === maxVal && maxVal > 0 ? "url(#barGradient)" : "var(--chart-1)"}
+                          fillOpacity={entry.value === maxVal && maxVal > 0 ? 1 : 0.15}
+                          className="transition-all hover:opacity-80"
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                ) : chartType === "area" ? (
+                  <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />}
+                    <XAxis
+                      dataKey="day"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
+                      dy={10}
+                    />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Area
+                      type={smoothCurve ? "monotone" : "linear"}
+                      dataKey="value"
+                      stroke="var(--chart-1)"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#areaGradient)"
+                    />
+                  </AreaChart>
+                ) : (
+                  <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />}
+                    <XAxis
+                      dataKey="day"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
+                      dy={10}
+                    />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line
+                      type={smoothCurve ? "monotone" : "linear"}
+                      dataKey="value"
+                      stroke="var(--chart-1)"
+                      strokeWidth={3}
+                      dot={{ r: 4, fill: "hsl(var(--card))", stroke: "var(--chart-1)", strokeWidth: 2 }}
+                      activeDot={{ r: 6, fill: "var(--chart-1)", stroke: "hsl(var(--card))", strokeWidth: 2 }}
+                    />
+                  </LineChart>
+                )}
+              </ResponsiveContainer>
+            </ChartContainer>
+          )}
         </div>
       </div>
     </div>
