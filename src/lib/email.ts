@@ -1,11 +1,24 @@
 import nodemailer from "nodemailer";
 
+// Helper to clean environment variable strings (trim spaces, single/double quotes)
+const cleanEnvVar = (val: string | undefined): string => {
+  if (!val) return "";
+  const trimmed = val.trim();
+  if (
+    (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
+    (trimmed.startsWith('"') && trimmed.endsWith('"'))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
+};
+
 // Retrieve email configurations from environment variables
-const SMTP_HOST = process.env.SMTP_HOST || "";
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587");
-const SMTP_USER = process.env.SMTP_USER || "";
-const SMTP_PASS = process.env.SMTP_PASS || "";
-const SMTP_FROM = process.env.SMTP_FROM || '"Insight Blog" <newsletter@insight.com>';
+const SMTP_USER = cleanEnvVar(process.env.SMTP_USER || process.env.TEST_USER_EMAIL);
+const SMTP_PASS = cleanEnvVar(process.env.SMTP_PASS || process.env.TEST_USER_PASS);
+const SMTP_HOST = cleanEnvVar(process.env.SMTP_HOST) || (SMTP_USER.endsWith("@gmail.com") ? "smtp.gmail.com" : "");
+const SMTP_PORT = parseInt(cleanEnvVar(process.env.SMTP_PORT) || (SMTP_HOST === "smtp.gmail.com" ? "465" : "587"));
+export const SMTP_FROM = cleanEnvVar(process.env.SMTP_FROM) || (SMTP_USER ? `"Insight Blog" <${SMTP_USER}>` : '"Insight Blog" <newsletter@insight.com>');
 
 /**
  * Creates and returns a Nodemailer transporter.

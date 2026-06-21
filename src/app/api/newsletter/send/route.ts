@@ -3,7 +3,7 @@ import connectDB from "@/lib/db";
 import Subscriber from "@/models/subscriber";
 import Campaign from "@/models/campaign";
 import { verifyToken } from "@/lib/jwt";
-import { getTransporter, getNewsletterTemplate } from "@/lib/email";
+import { getTransporter, getNewsletterTemplate, SMTP_FROM } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,9 +37,9 @@ export async function POST(req: NextRequest) {
       const testEmailHtml = getNewsletterTemplate(body.content, testUnsubscribeUrl);
 
       await transporter.sendMail({
-        from: process.env.SMTP_FROM || '"Insight Blog" <newsletter@insight.com>',
+        from: SMTP_FROM,
         to: body.testEmail,
-        subject: `[TEST] ${body.subject}`,
+        subject: `${body.subject}`,
         html: testEmailHtml,
       });
 
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
         const emailHtml = getNewsletterTemplate(body.content, unsubscribeUrl);
 
         await transporter.sendMail({
-          from: process.env.SMTP_FROM || '"Insight Blog" <newsletter@insight.com>',
+          from: SMTP_FROM,
           to: sub.email,
           subject: body.subject,
           html: emailHtml,
