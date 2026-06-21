@@ -23,6 +23,7 @@ import {
   Image,
   Files,
   MessageSquare,
+  Mail,
 } from "@/components/icons";
 import {
   Sidebar,
@@ -56,6 +57,7 @@ const navItems = [
   { title: "Authors", href: "/dashboard/authors", icon: Users, iconColor: "text-cyan-500" },
   { title: "Media", href: "/dashboard/media", icon: Image, iconColor: "text-amber-500" },
   { title: "Messages", href: "/dashboard/messages", icon: MessageSquare, iconColor: "text-rose-500" },
+  { title: "Subscribers", href: "/dashboard/subscribers", icon: Mail, iconColor: "text-purple-500" },
   { title: "Pages", href: "/dashboard/pages", icon: Files, iconColor: "text-indigo-500" },
   { title: "Settings", href: "/dashboard/settings", icon: Settings, iconColor: "text-muted-foreground" },
 ];

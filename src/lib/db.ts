@@ -50,5 +50,7 @@ import "@/models/category";
 import "@/models/post";
 import "@/models/message";
 import "@/models/analytics";
+import "@/models/subscriber";
+import "@/models/campaign";
 
 export default connectDB;
