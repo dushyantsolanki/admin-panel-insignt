@@ -41,9 +41,9 @@ export function PostSheet({ post, open, onOpenChange }: PostSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md border-l border-primary/10 shadow-2xl">
-        <SheetHeader className="space-y-4 pr-6">
-          <div className="flex items-center gap-2">
+      <SheetContent className="sm:max-w-md border-l border-primary/10 shadow-2xl px-2 py-1">
+        <SheetHeader className="space-y-4 pr-6 ">
+          <div className="flex items-center gap-2 px-0">
             <Badge variant="outline" className={cn(
               "px-2 py-0.5 rounded-full font-bold uppercase text-[10px] tracking-widest border-0",
               post.status === "draft" && "bg-slate-100 text-slate-600 dark:bg-slate-900",
@@ -62,7 +62,7 @@ export function PostSheet({ post, open, onOpenChange }: PostSheetProps) {
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-8 space-y-8">
+        <div className="mt-8 space-y-8 px-4">
           <div className="space-y-4">
             <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/50 flex items-center gap-2">
               <CalendarIcon className="size-3" /> Publication Schedule
