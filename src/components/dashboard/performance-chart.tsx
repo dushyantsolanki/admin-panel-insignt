@@ -15,41 +15,51 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, ChevronUp, ChevronDown } from "@/components/icons";
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+  EvilBarChart,
+  Bar as EvilBar,
+  XAxis as BarXAxis,
+  YAxis as BarYAxis,
+  Grid as BarGrid,
+  Tooltip as BarTooltip,
+} from "@/components/evilcharts/charts/bar-chart";
 import {
-  Bar,
-  BarChart,
-  Line,
-  LineChart,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Area,
-  AreaChart,
-} from "recharts";
+  EvilLineChart,
+  Line as EvilLine,
+  XAxis as LineXAxis,
+  YAxis as LineYAxis,
+  Grid as LineGrid,
+  Tooltip as LineTooltip,
+} from "@/components/evilcharts/charts/line-chart";
+import {
+  EvilAreaChart,
+  Area as EvilArea,
+  XAxis as AreaXAxis,
+  YAxis as AreaYAxis,
+  Grid as AreaGrid,
+  Tooltip as AreaTooltip,
+} from "@/components/evilcharts/charts/area-chart";
+import { type ChartConfig } from "@/components/evilcharts/ui/chart";
 import { cn } from "@/lib/utils";
 
 type ChartType = "bar" | "line" | "area";
 type Period = "7d" | "30d";
 
 const chartConfig = {
-  value: {
+  views: {
     label: "Views",
-    color: "hsl(var(--primary))",
+    colors: {
+      light: ["#3b82f6"],
+      dark: ["#60a5fa"],
+    },
   },
-};
+} satisfies ChartConfig;
 
 export function PerformanceChart() {
   const [chartType, setChartType] = useState<ChartType>("bar");
   const [period, setPeriod] = useState<Period>("7d");
   const [showGrid, setShowGrid] = useState(true);
   const [smoothCurve, setSmoothCurve] = useState(true);
-  const [data, setData] = useState<{ day: string; value: number }[]>([]);
+  const [data, setData] = useState<{ day: string; views: number; visitors: number }[]>([]);
   const [viewsStats, setViewsStats] = useState({ total: "0", change: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -84,8 +94,7 @@ export function PerformanceChart() {
     fetchChartData();
   }, [period]);
 
-  const maxVal = data.length > 0 ? Math.max(...data.map(d => d.value)) : 0;
-  const totalViewsThisPeriod = data.reduce((acc, curr) => acc + curr.value, 0);
+  const totalViewsThisPeriod = data.reduce((acc, curr) => acc + curr.views, 0);
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden h-full flex flex-col shadow-sm">
@@ -168,93 +177,47 @@ export function PerformanceChart() {
         </div>
 
         <div className="flex-1 w-full h-full min-h-[220px]">
-          {isLoading ? (
-            <div className="h-full w-full flex items-center justify-center bg-muted/10 rounded-lg animate-pulse">
-              <span className="text-xs text-muted-foreground">Loading chart data...</span>
-            </div>
+          {chartType === "bar" ? (
+            <EvilBarChart
+              data={data}
+              config={chartConfig}
+              className="h-full w-full"
+              isLoading={isLoading}
+            >
+              {showGrid && <BarGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />}
+              <BarXAxis dataKey="day" />
+              <BarYAxis />
+              <BarTooltip variant="frosted-glass" />
+              <EvilBar dataKey="views" variant="gradient" isClickable />
+            </EvilBarChart>
+          ) : chartType === "area" ? (
+            <EvilAreaChart
+              data={data}
+              config={chartConfig}
+              className="h-full w-full"
+              isLoading={isLoading}
+              curveType={smoothCurve ? "bump" : "linear"}
+            >
+              {showGrid && <AreaGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />}
+              <AreaXAxis dataKey="day" />
+              <AreaYAxis />
+              <AreaTooltip variant="frosted-glass" />
+              <EvilArea dataKey="views" variant="gradient" strokeVariant="solid" isClickable />
+            </EvilAreaChart>
           ) : (
-            <ChartContainer config={chartConfig} className="h-full w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                {chartType === "bar" ? (
-                  <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={1} />
-                        <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.6} />
-                      </linearGradient>
-                    </defs>
-                    {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />}
-                    <XAxis
-                      dataKey="day"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 12, fontWeight: 500 }}
-                      dy={10}
-                    />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                    <ChartTooltip cursor={{ fill: "hsl(var(--muted) / 0.5)" }} content={<ChartTooltipContent />} />
-                    <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={35}>
-                      {data.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={entry.value === maxVal && maxVal > 0 ? "url(#barGradient)" : "var(--chart-1)"}
-                          fillOpacity={entry.value === maxVal && maxVal > 0 ? 1 : 0.15}
-                          className="transition-all hover:opacity-80"
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                ) : chartType === "area" ? (
-                  <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />}
-                    <XAxis
-                      dataKey="day"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 12, fontWeight: 500 }}
-                      dy={10}
-                    />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Area
-                      type={smoothCurve ? "monotone" : "linear"}
-                      dataKey="value"
-                      stroke="var(--chart-1)"
-                      strokeWidth={3}
-                      fillOpacity={1}
-                      fill="url(#areaGradient)"
-                    />
-                  </AreaChart>
-                ) : (
-                  <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />}
-                    <XAxis
-                      dataKey="day"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 12, fontWeight: 500 }}
-                      dy={10}
-                    />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Line
-                      type={smoothCurve ? "monotone" : "linear"}
-                      dataKey="value"
-                      stroke="var(--chart-1)"
-                      strokeWidth={3}
-                      dot={{ r: 4, fill: "hsl(var(--card))", stroke: "var(--chart-1)", strokeWidth: 2 }}
-                      activeDot={{ r: 6, fill: "var(--chart-1)", stroke: "hsl(var(--card))", strokeWidth: 2 }}
-                    />
-                  </LineChart>
-                )}
-              </ResponsiveContainer>
-            </ChartContainer>
+            <EvilLineChart
+              data={data}
+              config={chartConfig}
+              className="h-full w-full"
+              isLoading={isLoading}
+              curveType={smoothCurve ? "bump" : "linear"}
+            >
+              {showGrid && <LineGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />}
+              <LineXAxis dataKey="day" />
+              <LineYAxis />
+              <LineTooltip variant="frosted-glass" />
+              <EvilLine dataKey="views" strokeVariant="solid" isClickable />
+            </EvilLineChart>
           )}
         </div>
       </div>

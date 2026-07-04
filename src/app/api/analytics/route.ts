@@ -103,6 +103,9 @@ export async function GET(req: NextRequest) {
     await connectDB();
     const { searchParams } = new URL(req.url);
     const period = searchParams.get("period") || "7d"; // 7d or 30d
+    const popularPage = Number(searchParams.get("popularPage") || "1");
+    const popularLimit = Number(searchParams.get("popularLimit") || "5");
+    const popularSearch = searchParams.get("popularSearch") || "";
 
     const now = new Date();
     const thirtyDaysAgo = new Date();
@@ -115,7 +118,7 @@ export async function GET(req: NextRequest) {
     // Total & Monthly posts
     const totalPostsCount = await Post.countDocuments();
     const totalPostsPrevious = await Post.countDocuments({ createdAt: { $lt: thirtyDaysAgo } });
-    const postsChange = totalPostsPrevious > 0 
+    const postsChange = totalPostsPrevious > 0
       ? Math.round(((totalPostsCount - totalPostsPrevious) / totalPostsPrevious) * 100)
       : (totalPostsCount > 0 ? 100 : 0);
 
@@ -172,20 +175,21 @@ export async function GET(req: NextRequest) {
     chartStartDate.setDate(now.getDate() - daysLimit + 1);
     chartStartDate.setHours(0, 0, 0, 0);
 
-    const dailyViews = await AnalyticsEvent.aggregate([
+    const dailyViewsAndVisitors = await AnalyticsEvent.aggregate([
       { $match: { timestamp: { $gte: chartStartDate } } },
       {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
-          count: { $sum: 1 }
+          views: { $sum: 1 },
+          visitors: { $addToSet: "$visitorId" }
         }
       },
       { $sort: { _id: 1 } }
     ]);
 
-    const dailyViewsMap = new Map<string, number>();
-    dailyViews.forEach((v: any) => {
-      dailyViewsMap.set(v._id, v.count);
+    const dailyMetricsMap = new Map<string, { views: number, visitors: number }>();
+    dailyViewsAndVisitors.forEach((v: any) => {
+      dailyMetricsMap.set(v._id, { views: v.views, visitors: v.visitors.length });
     });
 
     const chartData = [];
@@ -195,26 +199,51 @@ export async function GET(req: NextRequest) {
       const d = new Date(chartStartDate);
       d.setDate(chartStartDate.getDate() + i);
       const dateStr = d.toISOString().split("T")[0];
-      const value = dailyViewsMap.get(dateStr) || 0;
+      const metrics = dailyMetricsMap.get(dateStr) || { views: 0, visitors: 0 };
 
       if (daysLimit === 7) {
         chartData.push({
           day: dayNamesShort[d.getDay()],
-          value
+          views: metrics.views,
+          visitors: metrics.visitors
         });
       } else {
         const month = d.toLocaleDateString("en-US", { month: "short" });
         const dayNum = d.getDate();
         chartData.push({
           day: `${month} ${dayNum}`,
-          value
+          views: metrics.views,
+          visitors: metrics.visitors
         });
       }
     }
 
     // 3. Popular posts list
+    let matchedSlugs: string[] | null = null;
+    if (popularSearch) {
+      const posts = await Post.find({
+        $or: [
+          { title: { $regex: popularSearch, $options: "i" } },
+          { slug: { $regex: popularSearch, $options: "i" } }
+        ]
+      }, { slug: 1 });
+      matchedSlugs = posts.map(p => p.slug);
+    }
+
+    const matchStage: any = { postSlug: { $exists: true, $ne: null } };
+    if (matchedSlugs !== null) {
+      matchStage.postSlug = { $in: matchedSlugs };
+    }
+
+    const totalPopularPosts = await AnalyticsEvent.aggregate([
+      { $match: matchStage },
+      { $group: { _id: "$postSlug" } },
+      { $count: "count" }
+    ]);
+    const totalCount = totalPopularPosts[0]?.count || 0;
+
     const popularPostsAgg = await AnalyticsEvent.aggregate([
-      { $match: { postSlug: { $exists: true, $ne: null } } },
+      { $match: matchStage },
       {
         $group: {
           _id: "$postSlug",
@@ -226,7 +255,8 @@ export async function GET(req: NextRequest) {
         }
       },
       { $sort: { views: -1 } },
-      { $limit: 5 }
+      { $skip: (popularPage - 1) * popularLimit },
+      { $limit: popularLimit }
     ]);
 
     const popularPosts = [];
@@ -234,10 +264,10 @@ export async function GET(req: NextRequest) {
       const postDetail = await Post.findOne({ slug: postLog._id })
         .populate("author", "name")
         .populate("category", "name");
-      
+
       if (postDetail) {
         popularPosts.push({
-          id: postDetail._id,
+          id: postDetail._id.toString(),
           title: postDetail.title,
           slug: postDetail.slug,
           views: postLog.views,
@@ -249,6 +279,65 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // 4. Device, Referrer, Browser and OS Breakdowns
+    const deviceTypeBreakdown = await AnalyticsEvent.aggregate([
+      { $match: { timestamp: { $gte: chartStartDate } } },
+      { $group: { _id: "$deviceType", count: { $sum: 1 } } }
+    ]);
+    const devices = deviceTypeBreakdown.map((d: any) => ({
+      name: d._id ? (d._id.charAt(0).toUpperCase() + d._id.slice(1)) : "Desktop",
+      value: d.count
+    }));
+
+    const referrerBreakdown = await AnalyticsEvent.aggregate([
+      { $match: { timestamp: { $gte: chartStartDate } } },
+      {
+        $group: {
+          _id: {
+            $cond: [
+              { $or: [{ $eq: ["$referrer", ""] }, { $not: ["$referrer"] }] },
+              "Direct / Search",
+              "$referrer"
+            ]
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 6 }
+    ]);
+    const referrers = referrerBreakdown.map((r: any) => {
+      let name = r._id;
+      if (name.startsWith("http")) {
+        try {
+          name = new URL(name).hostname;
+        } catch (_) { }
+      }
+      return { name, value: r.count };
+    });
+
+    const browserBreakdown = await AnalyticsEvent.aggregate([
+      { $match: { timestamp: { $gte: chartStartDate } } },
+      { $group: { _id: "$browser", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 5 }
+    ]);
+    const browsers = browserBreakdown.map((b: any) => ({
+      name: b._id || "Other",
+      value: b.count
+    }));
+
+    const osBreakdown = await AnalyticsEvent.aggregate([
+      { $match: { timestamp: { $gte: chartStartDate } } },
+      { $group: { _id: "$os", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 5 }
+    ]);
+    const os = osBreakdown.map((o: any) => ({
+      name: o._id || "Other",
+      value: o.count
+    }));
+
     return NextResponse.json({
       stats: {
         totalPosts: { value: totalPostsCount.toLocaleString(), change: postsChange },
@@ -257,7 +346,19 @@ export async function GET(req: NextRequest) {
         totalReaders: { value: readersCurrent.toLocaleString(), change: readersChange }
       },
       performanceChartData: chartData,
-      popularPosts
+      popularPosts: {
+        posts: popularPosts,
+        pagination: {
+          total: totalCount,
+          page: popularPage,
+          limit: popularLimit,
+          pages: Math.ceil(totalCount / popularLimit)
+        }
+      },
+      devices,
+      referrers,
+      browsers,
+      os
     });
   } catch (error: any) {
     console.error("Analytics GET error:", error);

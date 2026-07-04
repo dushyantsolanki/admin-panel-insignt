@@ -35,6 +35,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import { DeleteConfirmModal } from "@/components/ui/delete-confirm-modal";
 import {
   Search,
   Filter,
@@ -50,7 +51,6 @@ import {
   ExternalLink,
   Loader2,
   Clock,
-  BookOpen,
 } from "lucide-react";
 import { useDashboardStore } from "@/store/dashboard-store";
 import { Pill, PillAvatar, PillIndicator, PillIcon } from "@/components/kibo-ui/pill";
@@ -113,6 +113,7 @@ function CategoryBadge({ category }: { category: string }) {
 export function PostsTable() {
   // State for data
   const [posts, setPosts] = useState<Post[]>([]);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [totalRows, setTotalRows] = useState(0);
   const [pageCount, setPageCount] = useState(0);
@@ -165,30 +166,23 @@ export function PostsTable() {
     fetchPosts();
   }, [pagination.pageIndex, pagination.pageSize, debouncedSearchQuery, postStatusFilter]);
 
-  const handleDelete = async (id: string) => {
-    gooeyToast.warning('Delete this post?', {
-      description: 'Are you sure you want to delete this article? This cannot be undone.',
-      duration: 8000,
-      action: {
-        label: 'Confirm Delete',
-        onClick: async () => {
-          try {
-            const res = await fetch(`/api/posts/${id}`, { method: "DELETE" });
-            if (!res.ok) throw new Error("Failed to delete post");
+  const handleDelete = (id: string) => {
+    setDeleteId(id);
+  };
 
-            gooeyToast.success('Post deleted', {
-              description: 'The article has been removed successfully.',
-            });
-            fetchPosts();
-          } catch (error: any) {
-            gooeyToast.error('Something went wrong', {
-              description: error.message || 'Error deleting post',
-            });
-            console.error("Error deleting post:", error);
-          }
-        },
-      },
-    });
+  const executeDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/posts/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete post");
+
+      fetchPosts();
+    } catch (error: any) {
+      gooeyToast.error('Something went wrong', {
+        description: error.message || 'Error deleting post',
+      });
+      console.error("Error deleting post:", error);
+      throw error;
+    }
   };
 
   const toggleHomeSetting = async (id: string, setting: "isHero" | "isFeatured", currentValue: boolean) => {
@@ -327,12 +321,7 @@ export function PostsTable() {
                   <span>{p.avgTime} avg</span>
                 </div>
               )}
-              {p.completionRate !== undefined && p.completionRate > 0 && (
-                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground tabular-nums">
-                  <BookOpen className="size-3 text-muted-foreground/75" />
-                  <span>{p.completionRate}% read</span>
-                </div>
-              )}
+
             </div>
           );
         },
@@ -372,7 +361,7 @@ export function PostsTable() {
         cell: ({ row }) => (
           <div className="flex items-center justify-start gap-1">
             <NextLink
-              href={`/blog/${row.original.slug}`}
+              href={`https://modern-blog-nine-virid.vercel.app/blog/${row.original.slug}`}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -658,6 +647,16 @@ export function PostsTable() {
           </Button>
         </div>
       </div>
+
+      <DeleteConfirmModal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => { if (deleteId) executeDelete(deleteId); }}
+        title="Delete Post"
+        description="Are you sure you want to permanently delete this blog post? This will remove the article and all its data."
+        confirmText="Delete"
+        requireHold={true}
+      />
     </div>
   );
 }

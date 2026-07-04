@@ -42,6 +42,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import { DeleteConfirmModal } from "@/components/ui/delete-confirm-modal";
 import {
   Search,
   Filter,
@@ -107,6 +108,9 @@ export function SubscribersTable() {
   const [pageSize, setPageSize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
   const [stats, setStats] = useState({ total: 0, active: 0, unsubscribed: 0, pending: 0 });
+
+  // Delete Subscriber State
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   // Add Subscriber Dialog State
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -198,8 +202,6 @@ export function SubscribersTable() {
   };
 
   const handleDeleteSubscriber = async (id: string) => {
-    if (!confirm("Are you sure you want to permanently delete this subscriber?")) return;
-
     try {
       const response = await fetch(`/api/subscribers/${id}`, {
         method: "DELETE",
@@ -207,10 +209,10 @@ export function SubscribersTable() {
 
       if (!response.ok) throw new Error("Failed to delete subscriber");
 
-      gooeyToast.success("Subscriber permanently deleted");
       fetchSubscribers();
     } catch (error: any) {
       gooeyToast.error("Delete failed", { description: error.message });
+      throw error;
     }
   };
 
@@ -279,7 +281,7 @@ export function SubscribersTable() {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                onClick={() => handleDeleteSubscriber(sub._id)}
+                onClick={() => setDeleteId(sub._id)}
               >
                 <Trash2 className="size-4" />
               </Button>
@@ -584,6 +586,16 @@ export function SubscribersTable() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmModal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => { if (deleteId) handleDeleteSubscriber(deleteId); }}
+        title="Delete Subscriber"
+        description="Are you sure you want to permanently delete this subscriber? They will no longer receive newsletter emails."
+        confirmText="Delete"
+        requireHold={true}
+      />
     </div>
   );
 }

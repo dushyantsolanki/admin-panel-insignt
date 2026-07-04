@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Post from "@/models/post";
+import AnalyticsEvent from "../../../../../models/analytics";
 
 export async function GET(req: NextRequest) {
   try {
@@ -25,10 +26,41 @@ export async function GET(req: NextRequest) {
       .sort({ date: -1 })
       .limit(10);
 
+    // Gather all unique slugs across all three post groups
+    const allPosts = [...heroPosts, ...featuredPosts, ...latestPosts];
+    const slugs = [...new Set(allPosts.map((p: any) => p.slug))];
+
+    // Aggregate real analytics from DB
+    const analytics = await AnalyticsEvent.aggregate([
+      { $match: { postSlug: { $in: slugs } } },
+      {
+        $group: {
+          _id: "$postSlug",
+          views: { $sum: 1 },
+          avgTime: { $avg: "$timeOnPage" }
+        }
+      }
+    ]);
+
+    const analyticsMap = new Map(analytics.map((a: any) => [a._id, a]));
+
+    const addStats = (postsArr: any[]) =>
+      postsArr.map(post => {
+        const obj = post.toObject ? post.toObject() : post;
+        const stats = analyticsMap.get(obj.slug);
+        return {
+          ...obj,
+          views: stats ? stats.views : (obj.views || 0),
+          avgTime: stats
+            ? `${Math.floor(stats.avgTime / 60)}:${Math.round(stats.avgTime % 60).toString().padStart(2, "0")}m`
+            : "0:00m",
+        };
+      });
+
     return NextResponse.json({
-      heroPosts,
-      featuredPosts,
-      latestPosts
+      heroPosts: addStats(heroPosts),
+      featuredPosts: addStats(featuredPosts),
+      latestPosts: addStats(latestPosts)
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

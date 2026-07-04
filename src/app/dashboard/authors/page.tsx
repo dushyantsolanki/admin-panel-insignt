@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Download, Plus } from "@/components/icons";
 import AuthorModal, { type Author } from "@/components/dashboard/author-modal";
 import { gooeyToast } from "goey-toast";
+import { DeleteConfirmModal } from "@/components/ui/delete-confirm-modal";
 
 export default function AuthorsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAuthor, setSelectedAuthor] = useState<Author | null>(null);
   const [authors, setAuthors] = useState<Author[]>([]);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchAuthors = async () => {
@@ -44,30 +46,23 @@ export default function AuthorsPage() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteAuthor = async (id: string) => {
-    gooeyToast.warning('Delete this author?', {
-      description: 'This action is permanent and cannot be undone.',
-      duration: 8000,
-      action: {
-        label: 'Confirm Delete',
-        onClick: async () => {
-          try {
-            const res = await fetch(`/api/authors/${id}`, { method: "DELETE" });
-            if (!res.ok) throw new Error("Failed to delete author");
-            
-            gooeyToast.success('Author deleted', {
-              description: 'The author has been removed successfully.',
-            });
-            fetchAuthors();
-          } catch (error: any) {
-            gooeyToast.error('Something went wrong', {
-              description: error.message || 'Error deleting author',
-            });
-            console.error("Error deleting author:", error);
-          }
-        },
-      },
-    });
+  const handleDeleteAuthor = (id: string) => {
+    setDeleteId(id);
+  };
+
+  const executeDeleteAuthor = async (id: string) => {
+    try {
+      const res = await fetch(`/api/authors/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete author");
+      
+      fetchAuthors();
+    } catch (error: any) {
+      gooeyToast.error('Something went wrong', {
+        description: error.message || 'Error deleting author',
+      });
+      console.error("Error deleting author:", error);
+      throw error;
+    }
   };
 
   const handleSaveAuthor = async (
@@ -148,6 +143,16 @@ export default function AuthorsPage() {
         initialValues={selectedAuthor || undefined}
         handleAdd={handleSaveAuthor}
         handleEdit={handleSaveAuthor}
+      />
+
+      <DeleteConfirmModal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => { if (deleteId) executeDeleteAuthor(deleteId); }}
+        title="Delete Author"
+        description="Are you sure you want to permanently delete this author profile? They will be removed from all associated articles."
+        confirmText="Delete"
+        requireHold={true}
       />
     </div>
   );

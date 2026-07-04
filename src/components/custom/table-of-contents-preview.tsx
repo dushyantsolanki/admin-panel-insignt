@@ -44,7 +44,7 @@ export function TableOfContentsPreview({ items, className }: TableOfContentsPrev
           {items.length} {items.length === 1 ? 'Item' : 'Items'}
         </span>
       </div>
-      
+
       <div className="p-4 max-h-[400px] overflow-y-auto">
         <ul className="space-y-1">
           {items.map((item, index) => (
@@ -55,7 +55,7 @@ export function TableOfContentsPreview({ items, className }: TableOfContentsPrev
               transition={{ delay: index * 0.05 }}
               className={cn(
                 "group flex items-center gap-3 py-1.5 px-2 rounded-lg transition-colors hover:bg-muted/50",
-                item.level === 1 ? "ml-0" : item.level === 2 ? "ml-4" : "ml-8"
+                item.level === 1 ? "ml-0" : item.level === 2 ? "ml-0" : "ml-2"
               )}
             >
               <div className={cn(
@@ -72,7 +72,7 @@ export function TableOfContentsPreview({ items, className }: TableOfContentsPrev
           ))}
         </ul>
       </div>
-      
+
       <div className="px-4 py-2 bg-muted/5 border-t">
         <p className="text-[10px] text-muted-foreground/60 italic">
           IDs are automatically generated for deep linking.

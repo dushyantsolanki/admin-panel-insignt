@@ -5,7 +5,6 @@ import {
   Sparkles,
   Eye,
   Clock,
-  BookOpen,
   ArrowUpRight,
   Award,
   TrendingUp,
@@ -37,7 +36,7 @@ export function AnalyticsHighlight() {
         const res = await fetch("/api/analytics");
         const json = await res.json();
         if (json.popularPosts) {
-          setPopularPosts(json.popularPosts);
+          setPopularPosts(json.popularPosts.posts || json.popularPosts);
         }
       } catch (error) {
         console.error("Error fetching popular posts:", error);
@@ -141,25 +140,11 @@ export function AnalyticsHighlight() {
                   </div>
                 </div>
 
-                {/* Progress bar for completion rate */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-xs font-medium">
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <BookOpen className="size-3" /> Completion rate
-                    </span>
-                    <span className="font-semibold text-foreground">{topPost.completionRate}%</span>
-                  </div>
-                  <div className="w-full bg-muted/60 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-primary to-primary/80 h-full rounded-full transition-all duration-1000 ease-out"
-                      style={{ width: `${topPost.completionRate}%` }}
-                    />
-                  </div>
-                </div>
+
 
                 <div className="mt-3 flex justify-end">
                   <NextLink
-                    href={`/blog/${topPost.slug}`}
+                    href={`https://modern-blog-nine-virid.vercel.app/blog/${topPost.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
@@ -207,12 +192,12 @@ export function AnalyticsHighlight() {
                             {post.views.toLocaleString()}
                           </p>
                           <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">
-                            {post.completionRate}% read • {post.avgTime}
+                            {post.avgTime}
                           </p>
                         </div>
 
                         <NextLink
-                          href={`/blog/${post.slug}`}
+                          href={`https://modern-blog-nine-virid.vercel.app/blog/${post.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="size-7 rounded-md border flex items-center justify-center hover:bg-primary/5 hover:text-primary hover:border-primary/20 transition-all opacity-0 group-hover/item:opacity-100"

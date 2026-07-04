@@ -48,13 +48,9 @@ export function DashboardContent() {
 
       <StatsCards />
 
-      <div className="grid grid-cols-2 lg:grid-cols-2 gap-6 items-stretch">
-        <div className="lg:col-span-1">
-          <PerformanceChart />
-        </div>
-        <div className="lg:col-span-1">
-          <AnalyticsHighlight />
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        <PerformanceChart />
+        <AnalyticsHighlight />
       </div>
 
       <div className="space-y-4">

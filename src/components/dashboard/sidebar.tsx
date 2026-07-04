@@ -19,6 +19,7 @@ import {
   Files,
   MessageSquare,
   Mail,
+  BarChart3,
 } from "@/components/icons";
 import {
   Sidebar,
@@ -36,6 +37,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, iconColor: "text-primary" },
+  { title: "Analytics", href: "/dashboard/analytics", icon: BarChart3, iconColor: "text-indigo-500" },
   // { title: "Insight AI", href: "/dashboard/ai", icon: Sparkles, iconColor: "text-violet-500" },
   { title: "Posts", href: "/dashboard/posts", icon: FileText, iconColor: "text-blue-500" },
   { title: "Calendar", href: "/dashboard/calendar", icon: Calendar, iconColor: "text-orange-500" },

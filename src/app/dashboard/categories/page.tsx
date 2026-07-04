@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Download, Plus } from "@/components/icons";
 import CategoryModal, { type Category } from "@/components/dashboard/category-modal";
 import { gooeyToast } from "goey-toast";
+import { DeleteConfirmModal } from "@/components/ui/delete-confirm-modal";
 
 export default function CategoriesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const handleAddCategory = () => {
     setSelectedCategory(null);
@@ -26,30 +28,23 @@ export default function CategoriesPage() {
     setRefreshTrigger((prev) => prev + 1);
   };
 
-  const handleDeleteCategory = async (id: string) => {
-    gooeyToast.warning('Delete category?', {
-      description: 'Are you sure you want to delete this category? This will affect posts assigned to it.',
-      duration: 8000,
-      action: {
-        label: 'Confirm Delete',
-        onClick: async () => {
-          try {
-            const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
-            if (!res.ok) throw new Error("Failed to delete category");
-            
-            gooeyToast.success('Category deleted', {
-              description: 'The category has been removed successfully.',
-            });
-            triggerRefresh();
-          } catch (error: any) {
-            gooeyToast.error('Something went wrong', {
-              description: error.message || 'Error deleting category',
-            });
-            console.error("Error deleting category:", error);
-          }
-        },
-      },
-    });
+  const handleDeleteCategory = (id: string) => {
+    setDeleteId(id);
+  };
+
+  const executeDeleteCategory = async (id: string) => {
+    try {
+      const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete category");
+      
+      triggerRefresh();
+    } catch (error: any) {
+      gooeyToast.error('Something went wrong', {
+        description: error.message || 'Error deleting category',
+      });
+      console.error("Error deleting category:", error);
+      throw error;
+    }
   };
 
   const handleSaveCategory = async (
@@ -133,6 +128,16 @@ export default function CategoriesPage() {
         initialValues={selectedCategory}
         handleAdd={handleSaveCategory}
         handleEdit={handleSaveCategory}
+      />
+
+      <DeleteConfirmModal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => { if (deleteId) executeDeleteCategory(deleteId); }}
+        title="Delete Category"
+        description="Are you sure you want to delete this category? This will affect posts assigned to it. This action cannot be undone."
+        confirmText="Delete"
+        requireHold={true}
       />
     </div>
   );
