@@ -57,11 +57,11 @@ function mergeHoverPaint<T extends Record<string, unknown>>(
       baseValue === undefined
         ? hoverValue
         : [
-            "case",
-            ["boolean", ["feature-state", "hover"], false],
-            hoverValue,
-            baseValue,
-          ];
+          "case",
+          ["boolean", ["feature-state", "hover"], false],
+          hoverValue,
+          baseValue,
+        ];
   }
   return merged as T;
 }
@@ -697,6 +697,7 @@ function MarkerTooltip({
     const tooltipInstance = new MapLibreGL.Popup({
       offset: 16,
       ...popupOptions,
+      className: "map-tooltip",
       closeOnClick: true,
       closeButton: false,
     }).setMaxWidth("none");
@@ -1810,8 +1811,8 @@ function MapArc<T extends MapArcDatum = MapArcDatum>({
       featureId == null
         ? undefined
         : latestRef.current.data.find(
-            (arc) => String(arc.id) === String(featureId),
-          );
+          (arc) => String(arc.id) === String(featureId),
+        );
 
     const handleMouseMove = (e: MapLibreGL.MapLayerMouseEvent) => {
       const featureId = e.features?.[0]?.id as string | number | undefined;

@@ -40,9 +40,10 @@ import {
 } from "@/components/evilcharts/charts/area-chart";
 import { type ChartConfig } from "@/components/evilcharts/ui/chart";
 import { cn } from "@/lib/utils";
-
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
+import { subDays } from "date-fns";
 type ChartType = "bar" | "line" | "area";
-type Period = "7d" | "30d";
 
 const chartConfig = {
   views: {
@@ -56,7 +57,10 @@ const chartConfig = {
 
 export function PerformanceChart() {
   const [chartType, setChartType] = useState<ChartType>("bar");
-  const [period, setPeriod] = useState<Period>("7d");
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  });
   const [showGrid, setShowGrid] = useState(true);
   const [smoothCurve, setSmoothCurve] = useState(true);
   const [data, setData] = useState<{ day: string; views: number; visitors: number }[]>([]);
@@ -65,7 +69,7 @@ export function PerformanceChart() {
 
   const resetToDefault = () => {
     setChartType("bar");
-    setPeriod("7d");
+    setDate({ from: subDays(new Date(), 30), to: new Date() });
     setShowGrid(true);
     setSmoothCurve(true);
   };
@@ -74,15 +78,23 @@ export function PerformanceChart() {
     async function fetchChartData() {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/analytics?period=${period}`);
+        const params = new URLSearchParams();
+        if (date?.from) params.set("startDate", date.from.toISOString());
+        if (date?.to) params.set("endDate", date.to.toISOString());
+
+        const res = await fetch(`/api/analytics/traffic?${params.toString()}`);
         const json = await res.json();
         if (json.performanceChartData) {
           setData(json.performanceChartData);
         }
-        if (json.stats) {
+        
+        // Fetch stats to get view change percentage
+        const statsRes = await fetch(`/api/analytics/stats?${params.toString()}`);
+        const statsJson = await statsRes.json();
+        if (statsJson.stats) {
           setViewsStats({
-            total: json.stats.monthlyViews.value,
-            change: json.stats.monthlyViews.change,
+            total: statsJson.stats.monthlyViews.value,
+            change: statsJson.stats.monthlyViews.change,
           });
         }
       } catch (error) {
@@ -92,7 +104,7 @@ export function PerformanceChart() {
       }
     }
     fetchChartData();
-  }, [period]);
+  }, [date]);
 
   const totalViewsThisPeriod = data.reduce((acc, curr) => acc + curr.views, 0);
 
@@ -100,44 +112,40 @@ export function PerformanceChart() {
     <div className="rounded-xl border border-border bg-card overflow-hidden h-full flex flex-col shadow-sm">
       <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/20">
         <h3 className="font-semibold text-sm sm:text-base">Visitor Analytics</h3>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-8 hover:bg-muted transition-colors">
-              <MoreVertical className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="text-sm">Chart Type</DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <DropdownMenuItem onClick={() => setChartType("bar")}>
-                  Bar Chart {chartType === "bar" && "✓"}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setChartType("line")}>
-                  Line Chart {chartType === "line" && "✓"}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setChartType("area")}>
-                  Area Chart {chartType === "area" && "✓"}
-                </DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="text-sm">Time Period</DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <DropdownMenuItem onClick={() => setPeriod("7d")}>
-                  Last 7 days {period === "7d" && "✓"}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setPeriod("30d")}>
-                  Last 30 days {period === "30d" && "✓"}
-                </DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-            <DropdownMenuSeparator />
-            <DropdownMenuCheckboxItem
-              checked={showGrid}
-              onCheckedChange={(value) => setShowGrid(!!value)}
-              className="text-sm"
-            >
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:block">
+            <DateRangePicker date={date} setDate={setDate} />
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="size-8 hover:bg-muted transition-colors">
+                <MoreVertical className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <div className="sm:hidden p-2">
+                <DateRangePicker date={date} setDate={setDate} />
+              </div>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="text-sm">Chart Type</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem onClick={() => setChartType("bar")}>
+                    Bar Chart {chartType === "bar" && "✓"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setChartType("line")}>
+                    Line Chart {chartType === "line" && "✓"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setChartType("area")}>
+                    Area Chart {chartType === "area" && "✓"}
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={showGrid}
+                onCheckedChange={(value) => setShowGrid(!!value)}
+                className="text-sm"
+              >
               Show Grid
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
@@ -154,6 +162,7 @@ export function PerformanceChart() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       </div>
       <div className="p-4 flex-1 flex flex-col">
         <div className="flex items-start justify-between mb-6">
@@ -172,7 +181,7 @@ export function PerformanceChart() {
             )}
           </div>
           <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold bg-muted/50 px-2 py-1 rounded">
-            {period === "7d" ? "Last 7 Days" : "Last 30 Days"}
+            Selected Period
           </div>
         </div>
 

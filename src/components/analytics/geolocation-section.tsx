@@ -106,7 +106,27 @@ export function GeolocationSection() {
                       <PillIndicator variant="success" pulse />
                     </Pill>
                   </MarkerContent>
+                  <MarkerTooltip className="flex flex-col gap-1.5 min-w-[140px] p-2.5">
+                    <h3 className="font-bold text-sm  mb-1">
+                      {countryData.country}
+                    </h3>
 
+                    <div className="flex flex-col gap-1 max-h-32 overflow-y-auto no-scrollbar">
+                      {countryData.states.map((s, i) => (
+                        <div key={i} className="flex justify-between items-center text-xs">
+                          <span className="truncate mr-3 opacity-90 font-medium">
+                            {s.city !== "Unknown" ? s.city : s.state}
+                          </span>
+                          <span className="font-mono opacity-70">{s.count}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex justify-between items-center pt-1 text-xs font-semibold">
+                      <span>Views</span>
+                      <span>{countryData.totalCount}</span>
+                    </div>
+                  </MarkerTooltip>
                 </MapMarker>
               );
             })}
@@ -120,7 +140,7 @@ export function GeolocationSection() {
 
         {/* Data List Area */}
         <div className="flex flex-col bg-background overflow-hidden max-h-[500px]">
-          <div className="bg-muted/30 p-3 border-b">
+          <div className="bg-muted/30 p-3 border-b rounded-b-lg">
             <h3 className="font-semibold text-sm">Top Regions</h3>
           </div>
           <div className="flex-1 overflow-y-auto p-0">
