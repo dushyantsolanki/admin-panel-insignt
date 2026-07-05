@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { subDays } from "date-fns";
-import { Loader2, MapPin } from "lucide-react";
+import { Loader2, MapPin, RefreshCw } from "lucide-react";
 import { DateRange } from "react-day-picker";
 
+import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { Map, MapControls, MapMarker, MarkerContent } from "@/components/ui/map";
+import { Map, MapControls, MapMarker, MarkerContent, MarkerPopup, MarkerTooltip } from "@/components/ui/map";
 import { Pill, PillIndicator } from "@/components/kibo-ui/pill";
 
 interface GeoData {
@@ -15,24 +16,6 @@ interface GeoData {
   states: { state: string; city: string; count: number; latitude?: number; longitude?: number }[];
 }
 
-const locationCoordinates: Record<string, [number, number]> = {
-  "India": [78.9629, 20.5937],
-  "United States": [-95.7129, 37.0902],
-  "United Kingdom": [-3.4359, 55.3781],
-  "Canada": [-106.3468, 56.1304],
-  "Australia": [133.7751, -25.2744],
-  "Germany": [10.4515, 51.1657],
-  "France": [2.2137, 46.2276],
-  "Japan": [138.2529, 36.2048],
-  "Brazil": [-51.9253, -14.2350],
-  "Ahmedabad": [72.5714, 23.0225],
-  "Gujarat": [71.1924, 22.2587],
-  "Mumbai": [72.8777, 19.0760],
-  "Delhi": [77.1025, 28.7041],
-  "Bangalore": [77.5946, 12.9716],
-  "New York": [-74.0060, 40.7128],
-  "London": [-0.1276, 51.5072]
-};
 
 export function GeolocationSection() {
   const [date, setDate] = useState<DateRange | undefined>({
@@ -42,29 +25,29 @@ export function GeolocationSection() {
   const [geoData, setGeoData] = useState<GeoData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchGeoData() {
-      setIsLoading(true);
-      try {
-        const params = new URLSearchParams();
-        if (date?.from) params.set("startDate", date.from.toISOString());
-        if (date?.to) params.set("endDate", date.to.toISOString());
+  const fetchGeoData = React.useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (date?.from) params.set("startDate", date.from.toISOString());
+      if (date?.to) params.set("endDate", date.to.toISOString());
 
-        const res = await fetch(`/api/analytics/geolocation/aggregate?${params.toString()}`);
-        const json = await res.json();
+      const res = await fetch(`/api/analytics/geolocation/aggregate?${params.toString()}`);
+      const json = await res.json();
 
-        if (json.success) {
-          setGeoData(json.data);
-        }
-      } catch (error) {
-        console.error("Error fetching geo data:", error);
-      } finally {
-        setIsLoading(false);
+      if (json.success) {
+        setGeoData(json.data);
       }
+    } catch (error) {
+      console.error("Error fetching geo data:", error);
+    } finally {
+      setIsLoading(false);
     }
-
-    fetchGeoData();
   }, [date]);
+
+  useEffect(() => {
+    fetchGeoData();
+  }, [fetchGeoData]);
 
   const topCountries = geoData.slice(0, 10);
 
@@ -75,7 +58,18 @@ export function GeolocationSection() {
           <MapPin className="size-5" />
           Geolocation
         </h3>
-        <DateRangePicker date={date} setDate={setDate} />
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={fetchGeoData}
+            disabled={isLoading}
+            className="h-9 w-9"
+          >
+            <RefreshCw className={`size-4 ${isLoading ? "animate-spin" : ""}`} />
+          </Button>
+          <DateRangePicker date={date} setDate={setDate} />
+        </div>
       </div>
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-0 overflow-hidden min-h-[500px]">
@@ -104,20 +98,15 @@ export function GeolocationSection() {
                 }
               }
 
-              if (!coords) {
-                coords = locationCoordinates[label] || locationCoordinates[countryData.country];
-              }
-
               if (!coords) return null;
-
               return (
                 <MapMarker key={`marker-${idx}`} longitude={coords[0]} latitude={coords[1]}>
-                  <MarkerContent>
-                    <Pill variant="secondary" className="whitespace-nowrap">
+                  <MarkerContent className="">
+                    <Pill variant="secondary" className="bg-transparent">
                       <PillIndicator variant="success" pulse />
-                      {label} ({countryData.totalCount})
                     </Pill>
                   </MarkerContent>
+
                 </MapMarker>
               );
             })}
