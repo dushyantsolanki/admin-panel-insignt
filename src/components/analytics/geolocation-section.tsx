@@ -6,13 +6,33 @@ import { Loader2, MapPin } from "lucide-react";
 import { DateRange } from "react-day-picker";
 
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { Map, MapControls } from "@/components/ui/map";
+import { Map, MapControls, MapMarker, MarkerContent } from "@/components/ui/map";
+import { Pill, PillIndicator } from "@/components/kibo-ui/pill";
 
 interface GeoData {
   country: string;
   totalCount: number;
-  states: { state: string; city: string; count: number }[];
+  states: { state: string; city: string; count: number; latitude?: number; longitude?: number }[];
 }
+
+const locationCoordinates: Record<string, [number, number]> = {
+  "India": [78.9629, 20.5937],
+  "United States": [-95.7129, 37.0902],
+  "United Kingdom": [-3.4359, 55.3781],
+  "Canada": [-106.3468, 56.1304],
+  "Australia": [133.7751, -25.2744],
+  "Germany": [10.4515, 51.1657],
+  "France": [2.2137, 46.2276],
+  "Japan": [138.2529, 36.2048],
+  "Brazil": [-51.9253, -14.2350],
+  "Ahmedabad": [72.5714, 23.0225],
+  "Gujarat": [71.1924, 22.2587],
+  "Mumbai": [72.8777, 19.0760],
+  "Delhi": [77.1025, 28.7041],
+  "Bangalore": [77.5946, 12.9716],
+  "New York": [-74.0060, 40.7128],
+  "London": [-0.1276, 51.5072]
+};
 
 export function GeolocationSection() {
   const [date, setDate] = useState<DateRange | undefined>({
@@ -58,17 +78,49 @@ export function GeolocationSection() {
         <DateRangePicker date={date} setDate={setDate} />
       </div>
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-0 overflow-hidden min-h-[400px]">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-0 overflow-hidden min-h-[500px]">
         {/* Map Area */}
         <div className="lg:col-span-2 relative bg-muted/50 border-r">
           <Map
-
             viewport={{
               center: [0, 20],
               zoom: 1.5
             }}
           >
             <MapControls />
+
+            {topCountries.map((countryData, idx) => {
+              let label = countryData.country;
+              let coords: [number, number] | undefined;
+
+              // Try to find the city or state first, otherwise use country
+              if (countryData.states && countryData.states.length > 0) {
+                const topState = countryData.states[0];
+                label = topState.city !== "Unknown" ? topState.city : (topState.state !== "Unknown" ? topState.state : countryData.country);
+
+                // Use API coordinates if available
+                if (topState.latitude && topState.longitude) {
+                  coords = [topState.longitude, topState.latitude];
+                }
+              }
+
+              if (!coords) {
+                coords = locationCoordinates[label] || locationCoordinates[countryData.country];
+              }
+
+              if (!coords) return null;
+
+              return (
+                <MapMarker key={`marker-${idx}`} longitude={coords[0]} latitude={coords[1]}>
+                  <MarkerContent>
+                    <Pill variant="secondary" className="whitespace-nowrap">
+                      <PillIndicator variant="success" pulse />
+                      {label} ({countryData.totalCount})
+                    </Pill>
+                  </MarkerContent>
+                </MapMarker>
+              );
+            })}
           </Map>
           {isLoading && (
             <div className="absolute inset-0 bg-background/50 flex items-center justify-center backdrop-blur-sm z-10">

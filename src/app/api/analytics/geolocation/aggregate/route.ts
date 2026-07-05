@@ -32,7 +32,9 @@ export async function GET(req: NextRequest) {
             state: '$state',
             city: '$city'
           },
-          count: { $sum: 1 }
+          count: { $sum: 1 },
+          latitude: { $first: '$latitude' },
+          longitude: { $first: '$longitude' }
         }
       },
       {
@@ -43,7 +45,9 @@ export async function GET(req: NextRequest) {
             $push: {
               state: '$_id.state',
               city: '$_id.city',
-              count: '$count'
+              count: '$count',
+              latitude: '$latitude',
+              longitude: '$longitude'
             }
           }
         }

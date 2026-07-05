@@ -4,6 +4,8 @@ export interface IGeolocation extends Document {
   country: string;
   state: string;
   city: string;
+  latitude?: number;
+  longitude?: number;
   ipHash?: string;
   createdAt: Date;
 }
@@ -12,6 +14,8 @@ const GeolocationSchema: Schema = new Schema({
   country: { type: String, default: 'Unknown' },
   state: { type: String, default: 'Unknown' },
   city: { type: String, default: 'Unknown' },
+  latitude: { type: Number },
+  longitude: { type: Number },
   ipHash: { type: String },
   createdAt: { type: Date, default: Date.now },
 });
