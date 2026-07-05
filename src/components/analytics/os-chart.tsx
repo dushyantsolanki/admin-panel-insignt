@@ -75,7 +75,7 @@ export function OsChart() {
             >
               <PolarGrid gridType="polygon" />
               <PolarAngleAxis dataKey="name" tick={true} />
-              <PolarRadiusAxis angle={30} domain={[0, "auto"]} tick={true} axisLine={true} />
+              <PolarRadiusAxis angle={30} domain={[0, "auto"]} tick={false} axisLine={false} />
               <Radar
                 dataKey="value"
                 fillOpacity={0.2}
