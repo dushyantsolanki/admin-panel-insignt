@@ -62,6 +62,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { GeolocationSection } from "@/components/analytics/geolocation-section";
 
 type Period = "7d" | "30d";
 
@@ -327,8 +328,10 @@ export function AnalyticsView() {
           ))}
       </div>
 
+      <GeolocationSection />
       {/* Primary Traffic Line Chart */}
       <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+
         <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/20">
           <h3 className="font-semibold text-sm sm:text-base">Traffic Overview</h3>
           <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold bg-muted/50 px-2 py-1 rounded">
@@ -336,6 +339,7 @@ export function AnalyticsView() {
           </span>
         </div>
         <div className="p-4 md:p-6">
+
           <div className="h-[350px] w-full">
             <EvilAreaChart
               data={chartData}
@@ -640,6 +644,8 @@ export function AnalyticsView() {
           </div>
         )}
       </div>
+
+
     </div>
   );
 }
