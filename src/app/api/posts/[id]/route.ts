@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+// Force HMR reload
 import connectDB from "@/lib/db";
 import Post from "@/models/post";
 

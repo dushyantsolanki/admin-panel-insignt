@@ -48,9 +48,13 @@ const PostSchema: Schema = new Schema(
     audioContentType: { type: String }, // e.g. 'audio/mpeg'
     readTime: { type: String },
     seo: {
+      focusKeyword: { type: String },
       metaTitle: { type: String },
       metaDescription: { type: String },
       keywords: { type: String },
+      canonicalUrl: { type: String },
+      ogImage: { type: String },
+      ogTitle: { type: String },
       ogDescription: { type: String },
     },
     isHero: { type: Boolean, default: false },
@@ -134,6 +138,9 @@ PostSchema.post('findOneAndUpdate', async function (doc) {
   }
 });
 
-const Post: Model<IPost> = mongoose.models.Post || mongoose.model<IPost>('Post', PostSchema);
+if (mongoose.models.Post) {
+  delete mongoose.models.Post;
+}
+const Post: Model<IPost> = mongoose.model<IPost>('Post', PostSchema);
 
 export default Post;
