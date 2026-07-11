@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Save, Loader2 } from "lucide-react";
+import { ChevronLeft, Save, Loader2, Upload, Headphones, CheckCircle2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { calculateReadTime } from "@/lib/utils";
@@ -57,6 +57,7 @@ import { gooeyToast } from "goey-toast";
 export default function NewPostPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [categories, setCategories] = useState<any[]>([]);
   const [authors, setAuthors] = useState<any[]>([]);
 
@@ -68,6 +69,8 @@ export default function NewPostPage() {
     status: "draft",
     image: "",
     videoUrl: "",
+    audioData: "",
+    audioContentType: "",
     focusKeyword: "",
     metaTitle: "",
     metaDescription: "",
@@ -139,6 +142,33 @@ export default function NewPostPage() {
     setTocItems(headings);
   };
 
+  const handleAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 15 * 1024 * 1024) { // 15MB limit to stay under MongoDB 16MB document limit
+        gooeyToast.error('File too large', {
+          description: 'Audio file must be less than 15MB to fit in the database.',
+        });
+        e.target.value = '';
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = (reader.result as string).split(',')[1];
+        setFormData(prev => ({
+          ...prev,
+          audioData: base64String,
+          audioContentType: file.type
+        }));
+        gooeyToast.success('Audio prepared', {
+          description: 'Audio file is ready to be saved.',
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -159,9 +189,15 @@ export default function NewPostPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.slug || !formData.category || !formData.author) {
+    const missingFields = [];
+    if (!formData.title) missingFields.push('Title');
+    if (!formData.slug) missingFields.push('Slug');
+    if (!formData.category) missingFields.push('Category');
+    if (!formData.author) missingFields.push('Author');
+
+    if (missingFields.length > 0) {
       gooeyToast.error('Missing Required Fields', {
-        description: 'Please fill in Title, Slug, Category, and Author before publishing.',
+        description: `Please fill in the following before saving: ${missingFields.join(', ')}`,
       });
       return;
     }
@@ -183,16 +219,36 @@ export default function NewPostPage() {
         }
       };
 
-      const response = await fetch("/api/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(postData),
-      });
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/posts");
+        xhr.setRequestHeader("Content-Type", "application/json");
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create post");
-      }
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            setUploadProgress(percent);
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(JSON.parse(xhr.responseText));
+          } else {
+            let errorData;
+            try {
+              errorData = JSON.parse(xhr.responseText);
+            } catch (e) {
+              errorData = { error: "Failed to create post" };
+            }
+            reject(new Error(errorData.error || "Failed to create post"));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error("Network Error during upload"));
+
+        xhr.send(JSON.stringify(postData));
+      });
 
 
       gooeyToast.success('Post Published', {
@@ -206,6 +262,7 @@ export default function NewPostPage() {
       });
     } finally {
       setIsSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
@@ -241,10 +298,23 @@ export default function NewPostPage() {
             type="submit"
             size="sm"
             disabled={isSubmitting}
-            className="h-9 gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm px-4"
+            className="h-9 gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm px-4 relative overflow-hidden"
           >
-            {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-            Publish Post
+            {isSubmitting ? (
+              <>
+                <Loader2 className="size-4 animate-spin z-10" />
+                <span className="z-10">{uploadProgress > 0 && uploadProgress < 100 ? `Uploading ${uploadProgress}%` : "Publishing..."}</span>
+                <div 
+                  className="absolute left-0 top-0 bottom-0 bg-black/20 z-0 transition-all duration-300" 
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </>
+            ) : (
+              <>
+                <Save className="size-4" />
+                Publish Post
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -462,6 +532,46 @@ export default function NewPostPage() {
                   className="w-full bg-muted/30 border border-border/50 rounded-lg px-3 h-10 text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all"
                   placeholder="https://youtube.com/watch?v=..."
                 />
+              </div>
+              <div className="space-y-3">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <Headphones className="w-4 h-4 text-primary" /> Audio Voice (Max 15MB)
+                </label>
+                
+                {!formData.audioData ? (
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border/50 rounded-xl bg-muted/10 hover:bg-muted/30 transition-all cursor-pointer group">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                      <div className="w-10 h-10 mb-3 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Upload className="w-5 h-5 text-primary" />
+                      </div>
+                      <p className="mb-1 text-sm text-muted-foreground"><span className="font-semibold text-foreground">Click to upload</span> your audio</p>
+                      <p className="text-xs text-muted-foreground/70">MP3, WAV, OGG (MAX. 15MB)</p>
+                    </div>
+                    <input type="file" accept="audio/*" onChange={handleAudioUpload} className="hidden" />
+                  </label>
+                ) : (
+                  <div className="relative flex flex-col gap-3 p-4 rounded-xl border border-primary/20 bg-primary/5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                          <span className="text-sm font-medium text-foreground">Audio Track Ready</span>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => setFormData({...formData, audioData: "", audioContentType: ""})} 
+                        className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors group"
+                        title="Remove audio"
+                      >
+                          <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                      </button>
+                    </div>
+                    <audio 
+                      controls 
+                      src={`data:${formData.audioContentType || 'audio/mpeg'};base64,${formData.audioData}`} 
+                      className="w-full h-10 outline-none rounded-lg"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>

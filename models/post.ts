@@ -10,6 +10,8 @@ export interface IPost extends Document {
   status: 'draft' | 'published' | 'scheduled';
   image: string;
   videoUrl?: string;
+  audioData?: string; // Base64 encoded audio
+  audioContentType?: string; // MIME type
   views: number;
   readTime: string;
   seo: {
@@ -42,6 +44,8 @@ const PostSchema: Schema = new Schema(
     },
     image: { type: String }, // Featured Image URL
     videoUrl: { type: String }, // Featured Video URL
+    audioData: { type: String }, // Base64 audio string
+    audioContentType: { type: String }, // e.g. 'audio/mpeg'
     readTime: { type: String },
     seo: {
       metaTitle: { type: String },
