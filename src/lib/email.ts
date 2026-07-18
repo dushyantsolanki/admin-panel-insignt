@@ -18,7 +18,7 @@ const SMTP_USER = cleanEnvVar(process.env.SMTP_USER || process.env.TEST_USER_EMA
 const SMTP_PASS = cleanEnvVar(process.env.SMTP_PASS || process.env.TEST_USER_PASS);
 const SMTP_HOST = cleanEnvVar(process.env.SMTP_HOST) || (SMTP_USER.endsWith("@gmail.com") ? "smtp.gmail.com" : "");
 const SMTP_PORT = parseInt(cleanEnvVar(process.env.SMTP_PORT) || (SMTP_HOST === "smtp.gmail.com" ? "465" : "587"));
-export const SMTP_FROM = cleanEnvVar(process.env.SMTP_FROM) || (SMTP_USER ? `"Insight Blog" <${SMTP_USER}>` : '"Insight Blog" <newsletter@insight.com>');
+export const SMTP_FROM = cleanEnvVar(process.env.SMTP_FROM) || (SMTP_USER ? `"Pubpulse Blog" <${SMTP_USER}>` : '"Pubpulse Blog" <newsletter@pubpulse.com>');
 
 /**
  * Creates and returns a Nodemailer transporter.
@@ -84,7 +84,7 @@ export function getNewsletterTemplate(content: string, unsubscribeUrl: string): 
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Insight Newsletter</title>
+        <title>Pubpulse Newsletter</title>
         <style>
           body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -141,7 +141,7 @@ export function getNewsletterTemplate(content: string, unsubscribeUrl: string): 
       <body>
         <div class="container">
           <div class="header">
-            <h1>Insight</h1>
+            <h1>Pubpulse</h1>
           </div>
           <div class="content">
             ${content}
