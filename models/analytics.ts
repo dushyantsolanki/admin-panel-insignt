@@ -12,8 +12,10 @@ export interface IAnalyticsEvent extends Document {
   language?: string;
   postSlug?: string;
   timeOnPage: number; // in seconds
-  scrollDepth: number; // percentage (0-100)
   completedRead: boolean;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
   timestamp: Date;
 }
 
@@ -35,8 +37,10 @@ const AnalyticsEventSchema: Schema = new Schema(
     language: { type: String },
     postSlug: { type: String, index: true },
     timeOnPage: { type: Number, default: 0 },
-    scrollDepth: { type: Number, default: 0 },
     completedRead: { type: Boolean, default: false },
+    utmSource: { type: String, index: true },
+    utmMedium: { type: String },
+    utmCampaign: { type: String },
     timestamp: { type: Date, default: Date.now, index: true },
   },
   { timestamps: true }

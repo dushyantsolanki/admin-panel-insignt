@@ -45,8 +45,10 @@ export async function POST(req: NextRequest) {
       language,
       postSlug,
       timeOnPage = 0,
-      scrollDepth = 0,
       completedRead = false,
+      utmSource,
+      utmMedium,
+      utmCampaign,
     } = data;
 
     if (!viewId || !visitorId || !path) {
@@ -76,10 +78,12 @@ export async function POST(req: NextRequest) {
           deviceType,
           language: language || "en",
           postSlug: postSlug || undefined,
+          utmSource,
+          utmMedium,
+          utmCampaign,
         },
         $max: {
           timeOnPage,
-          scrollDepth,
         },
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }
@@ -338,6 +342,18 @@ export async function GET(req: NextRequest) {
       value: o.count
     }));
 
+    // 5. Traffic/Share Sources (utmSource) Breakdown
+    const shareSourceBreakdown = await AnalyticsEvent.aggregate([
+      { $match: { timestamp: { $gte: chartStartDate }, utmSource: { $exists: true, $ne: null } } },
+      { $group: { _id: "$utmSource", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 6 }
+    ]);
+    const shareSources = shareSourceBreakdown.map((s: any) => ({
+      name: s._id.charAt(0).toUpperCase() + s._id.slice(1),
+      value: s.count
+    }));
+
     return NextResponse.json({
       stats: {
         totalPosts: { value: totalPostsCount.toLocaleString(), change: postsChange },
@@ -358,7 +374,8 @@ export async function GET(req: NextRequest) {
       devices,
       referrers,
       browsers,
-      os
+      os,
+      shareSources
     });
   } catch (error: any) {
     console.error("Analytics GET error:", error);

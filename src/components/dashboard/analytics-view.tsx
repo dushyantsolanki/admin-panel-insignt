@@ -7,6 +7,7 @@ import { DeviceChart } from "@/components/analytics/device-chart";
 import { ReferrersChart } from "@/components/analytics/referrers-chart";
 import { BrowsersChart } from "@/components/analytics/browsers-chart";
 import { OsChart } from "@/components/analytics/os-chart";
+import { ShareSourcesChart } from "@/components/analytics/share-sources-chart";
 
 export function AnalyticsView() {
   return (
@@ -26,6 +27,7 @@ export function AnalyticsView() {
         <ReferrersChart />
         <BrowsersChart />
         <OsChart />
+        <ShareSourcesChart />
       </div>
     </div>
   );
