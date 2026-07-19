@@ -38,7 +38,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, iconColor: "text-primary" },
   { title: "Analytics", href: "/dashboard/analytics", icon: BarChart3, iconColor: "text-indigo-500" },
-  // { title: "Pubpulse AI", href: "/dashboard/ai", icon: Sparkles, iconColor: "text-violet-500" },
+  // { title: "Xenon AI", href: "/dashboard/ai", icon: Sparkles, iconColor: "text-violet-500" },
   { title: "Posts", href: "/dashboard/posts", icon: FileText, iconColor: "text-blue-500" },
   { title: "Calendar", href: "/dashboard/calendar", icon: Calendar, iconColor: "text-orange-500" },
   { title: "Categories", href: "/dashboard/categories", icon: LayoutGrid, iconColor: "text-emerald-500" },
@@ -65,7 +65,7 @@ export function DashboardSidebar(
               <span className="text-sm font-bold">I</span>
             </div>
             <span className="font-semibold text-sidebar-foreground truncate group-data-[collapsible=icon]:hidden">
-              Pubpulse
+              Xenon
             </span>
           </div>
         </div>

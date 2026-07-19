@@ -121,7 +121,7 @@ export function ComposeNewsletterModal({ isOpen, onClose }: ComposeNewsletterMod
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb; color: #1f2937; margin: 0; padding: 20px;">
         <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb;">
           <div style="background-color: #0f172a; padding: 24px; text-align: center;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 800;">Pubpulse</h1>
+            <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 800;">Xenon</h1>
           </div>
           <div style="padding: 30px; line-height: 1.6; font-size: 15px;">
             ${parsedContent}
