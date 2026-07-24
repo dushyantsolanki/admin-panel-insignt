@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Save, Loader2, Upload, Headphones, CheckCircle2, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { calculateReadTime } from "@/lib/utils";
 import {
   type Editor,
@@ -54,7 +54,7 @@ import { TableOfContentsPreview, type TOCItem } from "@/components/custom/table-
 import { extractHeadingsFromHTML } from "@/lib/toc";
 import { gooeyToast } from "goey-toast";
 
-export default function NewPostPage() {
+function NewPostForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -76,7 +76,6 @@ export default function NewPostPage() {
     metaDescription: "",
     keywords: "",
     canonicalUrl: "",
-    ogImage: "",
     ogTitle: "",
     ogDescription: "",
     readTime: "1 min read",
@@ -99,6 +98,8 @@ export default function NewPostPage() {
   const [htmlContent, setHtmlContent] = useState("");
   const [tocItems, setTocItems] = useState<TOCItem[]>([]);
 
+  const searchParams = useSearchParams();
+
   useEffect(() => {
     // Fetch categories and authors
     const fetchData = async () => {
@@ -110,12 +111,45 @@ export default function NewPostPage() {
         const catsData = await catsRes.json();
         const auths = await authsRes.json();
 
-        setCategories(catsData.categories || []);
+        const catList = catsData.categories || [];
+        setCategories(catList);
         setAuthors(auths);
 
-        // Set defaults if data available
-        if (catsData.categories?.length > 0) setFormData(prev => ({ ...prev, category: catsData.categories[0]._id }));
-        if (auths.length > 0) setFormData(prev => ({ ...prev, author: auths[0]._id }));
+        // Pre-fill from query params if coming from Google Trending Topics
+        const paramTitle = searchParams.get("title");
+        const paramCategory = searchParams.get("category");
+        const paramFocusKeyword = searchParams.get("focusKeyword");
+
+        if (paramTitle || paramCategory || paramFocusKeyword) {
+          let matchedCatId = catList.length > 0 ? catList[0]._id : "";
+          if (paramCategory) {
+            const foundCat = catList.find((c: any) => c.name.toLowerCase() === paramCategory.toLowerCase());
+            if (foundCat) matchedCatId = foundCat._id;
+          }
+
+          const generatedSlug = paramTitle
+            ? paramTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+            : "";
+
+          setFormData(prev => ({
+            ...prev,
+            title: paramTitle || prev.title,
+            slug: generatedSlug || prev.slug,
+            category: matchedCatId || prev.category,
+            author: auths.length > 0 ? auths[0]._id : prev.author,
+            focusKeyword: paramFocusKeyword || paramTitle || prev.focusKeyword,
+            metaTitle: paramTitle || prev.metaTitle,
+            keywords: paramFocusKeyword ? `${paramFocusKeyword}, trending, ${paramCategory || ""}` : prev.keywords,
+          }));
+
+          gooeyToast.success("Trend Data Loaded", {
+            description: `Pre-filled form with trend: "${paramTitle}"`,
+          });
+        } else {
+          // Set defaults if data available
+          if (catList.length > 0) setFormData(prev => ({ ...prev, category: catList[0]._id }));
+          if (auths.length > 0) setFormData(prev => ({ ...prev, author: auths[0]._id }));
+        }
       } catch (error: any) {
         gooeyToast.error('Failed to load data', {
           description: error.message || 'Error fetching categories or authors',
@@ -124,7 +158,7 @@ export default function NewPostPage() {
       }
     };
     fetchData();
-  }, []);
+  }, [searchParams]);
 
   const handleUpdate = ({ editor }: { editor: Editor }) => {
     const json = editor.getJSON();
@@ -152,7 +186,7 @@ export default function NewPostPage() {
         e.target.value = '';
         return;
       }
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = (reader.result as string).split(',')[1];
@@ -213,7 +247,6 @@ export default function NewPostPage() {
           metaDescription: formData.metaDescription,
           keywords: formData.keywords,
           canonicalUrl: formData.canonicalUrl,
-          ogImage: formData.ogImage,
           ogTitle: formData.ogTitle,
           ogDescription: formData.ogDescription,
         }
@@ -304,8 +337,8 @@ export default function NewPostPage() {
               <>
                 <Loader2 className="size-4 animate-spin z-10" />
                 <span className="z-10">{uploadProgress > 0 && uploadProgress < 100 ? `Uploading ${uploadProgress}%` : "Publishing..."}</span>
-                <div 
-                  className="absolute left-0 top-0 bottom-0 bg-black/20 z-0 transition-all duration-300" 
+                <div
+                  className="absolute left-0 top-0 bottom-0 bg-black/20 z-0 transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </>
@@ -537,7 +570,7 @@ export default function NewPostPage() {
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                   <Headphones className="w-4 h-4 text-primary" /> Audio Voice (Max 15MB)
                 </label>
-                
+
                 {!formData.audioData ? (
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border/50 rounded-xl bg-muted/10 hover:bg-muted/30 transition-all cursor-pointer group">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
@@ -553,21 +586,21 @@ export default function NewPostPage() {
                   <div className="relative flex flex-col gap-3 p-4 rounded-xl border border-primary/20 bg-primary/5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                          <span className="text-sm font-medium text-foreground">Audio Track Ready</span>
+                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                        <span className="text-sm font-medium text-foreground">Audio Track Ready</span>
                       </div>
-                      <button 
-                        type="button" 
-                        onClick={() => setFormData({...formData, audioData: "", audioContentType: ""})} 
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, audioData: "", audioContentType: "" })}
                         className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors group"
                         title="Remove audio"
                       >
-                          <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
                       </button>
                     </div>
-                    <audio 
-                      controls 
-                      src={`data:${formData.audioContentType || 'audio/mpeg'};base64,${formData.audioData}`} 
+                    <audio
+                      controls
+                      src={`data:${formData.audioContentType || 'audio/mpeg'};base64,${formData.audioData}`}
                       className="w-full h-10 outline-none rounded-lg"
                     />
                   </div>
@@ -612,20 +645,6 @@ export default function NewPostPage() {
                 ></textarea>
               </div>
 
-              <div className="pt-2 border-t border-border/50 space-y-4">
-                <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Social Overrides</h4>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">OG Image URL</label>
-                  <input
-                    type="text"
-                    name="ogImage"
-                    value={formData.ogImage}
-                    onChange={handleInputChange}
-                    className="w-full bg-muted/30 border border-border/50 rounded-lg px-3 h-10 text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all"
-                    placeholder="https://example.com/og-image.jpg"
-                  />
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -633,3 +652,16 @@ export default function NewPostPage() {
     </form>
   );
 }
+
+export default function NewPostPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="size-6 animate-spin text-primary" />
+      </div>
+    }>
+      <NewPostForm />
+    </Suspense>
+  );
+}
+

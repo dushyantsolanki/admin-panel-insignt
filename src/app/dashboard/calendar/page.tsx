@@ -8,11 +8,15 @@ import { Plus } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 
 import { CreatePostDialog } from "@/components/dashboard/calendar/create-post-dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function CalendarPage() {
-  const { currentWeekStart, posts } = useCalendarStore();
+  const { currentWeekStart, posts, fetchPostsFromDB } = useCalendarStore();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+  useEffect(() => {
+    fetchPostsFromDB();
+  }, [fetchPostsFromDB]);
 
   const scheduledCount = posts.filter(p => p.status === "scheduled").length;
   const draftCount = posts.filter(p => p.status === "draft").length;

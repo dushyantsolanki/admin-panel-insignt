@@ -20,6 +20,7 @@ import {
   MessageSquare,
   Mail,
   BarChart3,
+  TrendingUp,
 } from "@/components/icons";
 import {
   Sidebar,
@@ -38,7 +39,8 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, iconColor: "text-primary" },
   { title: "Analytics", href: "/dashboard/analytics", icon: BarChart3, iconColor: "text-indigo-500" },
-  // { title: "Xenon AI", href: "/dashboard/ai", icon: Sparkles, iconColor: "text-violet-500" },
+  { title: "Trending Topics", href: "/dashboard/trending", icon: TrendingUp, iconColor: "text-green-500" },
+  { title: "AI Pipeline", href: "/dashboard/ai-pipeline", icon: Sparkles, iconColor: "text-purple-500" },
   { title: "Posts", href: "/dashboard/posts", icon: FileText, iconColor: "text-blue-500" },
   { title: "Calendar", href: "/dashboard/calendar", icon: Calendar, iconColor: "text-orange-500" },
   { title: "Categories", href: "/dashboard/categories", icon: LayoutGrid, iconColor: "text-emerald-500" },
@@ -46,8 +48,6 @@ const navItems = [
   { title: "Media", href: "/dashboard/media", icon: Image, iconColor: "text-amber-500" },
   { title: "Messages", href: "/dashboard/messages", icon: MessageSquare, iconColor: "text-rose-500" },
   { title: "Subscribers", href: "/dashboard/subscribers", icon: Mail, iconColor: "text-purple-500" },
-  // { title: "Pages", href: "/dashboard/pages", icon: Files, iconColor: "text-indigo-500" },
-  // { title: "Settings", href: "/dashboard/settings", icon: Settings, iconColor: "text-muted-foreground" },
 ];
 
 export function DashboardSidebar(

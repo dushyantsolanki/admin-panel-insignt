@@ -10,6 +10,9 @@ import {
   FileText,
   Clock,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  X,
 } from "@/components/icons";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -30,6 +33,8 @@ export function CalendarControls() {
     setSearchQuery,
     goToToday,
     goToDate,
+    goToPreviousWeek,
+    goToNextWeek,
     currentWeekStart,
     statusFilter,
     setStatusFilter,
@@ -40,55 +45,78 @@ export function CalendarControls() {
   const weekStart = format(currentWeekStart, "MMM dd");
   const weekEnd = format(
     new Date(currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000),
-    "MMM dd yyyy"
+    "MMM dd, yyyy"
   );
 
   const hasActiveFilters = statusFilter !== "all";
 
   return (
-    <div className="px-3 md:px-6 py-4 border rounded-xl border-border mb-4">
+    <div className="px-3 md:px-6 py-3 border rounded-xl border-border mb-4 bg-muted/20">
       <div className="flex items-center gap-2 md:gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[200px] max-w-[280px] shrink-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
-            placeholder="Search posts..."
+            placeholder="Search posts by title, author, category..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 pr-9 h-8 bg-background border-primary/10"
+            className="pl-9 pr-8 h-8 text-xs bg-background border-border/60"
           />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-1 top-1/2 -translate-y-1/2 size-6"
-          >
-            <Settings className="size-3.5" />
-          </Button>
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 -translate-y-1/2 size-6 text-muted-foreground hover:text-foreground"
+              onClick={() => setSearchQuery("")}
+            >
+              <X className="size-3.5" />
+            </Button>
+          )}
         </div>
 
-        <Button
-          variant="outline"
-          className="h-8 px-3 shrink-0 border-primary/10"
-          onClick={goToToday}
-        >
-          Today
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-8 border-border/60 bg-background"
+            onClick={goToPreviousWeek}
+            title="Previous Week"
+          >
+            <ChevronLeft className="size-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="h-8 px-3 text-xs border-border/60 bg-background font-medium"
+            onClick={goToToday}
+          >
+            Today
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-8 border-border/60 bg-background"
+            onClick={goToNextWeek}
+            title="Next Week"
+          >
+            <ChevronRight className="size-4" />
+          </Button>
+        </div>
 
         <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               className={cn(
-                "h-8 px-3 gap-2 justify-start text-left font-normal shrink-0 border-primary/10",
+                "h-8 px-3 gap-2 justify-start text-left font-normal shrink-0 border-border/60 bg-background",
                 "hover:bg-accent"
               )}
             >
-              <CalendarIcon className="size-4 text-muted-foreground" />
-              <span className="text-xs text-foreground">
-                {weekStart} - {weekEnd}
+              <CalendarIcon className="size-3.5 text-muted-foreground" />
+              <span className="text-xs text-foreground font-semibold">
+                {weekStart} – {weekEnd}
               </span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0 border-border shadow-xl" align="start">
             <Calendar
               mode="single"
               selected={currentWeekStart}

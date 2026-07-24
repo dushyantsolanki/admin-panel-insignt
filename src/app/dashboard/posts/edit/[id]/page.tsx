@@ -79,7 +79,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
     metaDescription: "",
     keywords: "",
     canonicalUrl: "",
-    ogImage: "",
     ogTitle: "",
     ogDescription: "",
     readTime: "1 min read",
@@ -126,7 +125,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
           metaDescription: post.seo?.metaDescription || "",
           keywords: post.seo?.keywords || "",
           canonicalUrl: post.seo?.canonicalUrl || "",
-          ogImage: post.seo?.ogImage || "",
           ogTitle: post.seo?.ogTitle || "",
           ogDescription: post.seo?.ogDescription || "",
           readTime: post.readTime || calculateReadTime(post.content || ""),
@@ -169,7 +167,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
         e.target.value = '';
         return;
       }
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = (reader.result as string).split(',')[1];
@@ -221,7 +219,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
           metaDescription: formData.metaDescription,
           keywords: formData.keywords,
           canonicalUrl: formData.canonicalUrl,
-          ogImage: formData.ogImage,
           ogTitle: formData.ogTitle,
           ogDescription: formData.ogDescription,
         }
@@ -320,8 +317,8 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
               <>
                 <Loader2 className="size-4 animate-spin z-10" />
                 <span className="z-10">{uploadProgress > 0 && uploadProgress < 100 ? `Uploading ${uploadProgress}%` : "Saving..."}</span>
-                <div 
-                  className="absolute left-0 top-0 bottom-0 bg-black/20 z-0 transition-all duration-300" 
+                <div
+                  className="absolute left-0 top-0 bottom-0 bg-black/20 z-0 transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </>
@@ -547,7 +544,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                   <Headphones className="w-4 h-4 text-primary" /> Audio Voice (Max 15MB)
                 </label>
-                
+
                 {!formData.audioData ? (
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border/50 rounded-xl bg-muted/10 hover:bg-muted/30 transition-all cursor-pointer group">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
@@ -563,21 +560,21 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                   <div className="relative flex flex-col gap-3 p-4 rounded-xl border border-primary/20 bg-primary/5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                          <span className="text-sm font-medium text-foreground">Audio Track Ready</span>
+                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                        <span className="text-sm font-medium text-foreground">Audio Track Ready</span>
                       </div>
-                      <button 
-                        type="button" 
-                        onClick={() => setFormData({...formData, audioData: "", audioContentType: ""})} 
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, audioData: "", audioContentType: "" })}
                         className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors group"
                         title="Remove audio"
                       >
-                          <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
                       </button>
                     </div>
-                    <audio 
-                      controls 
-                      src={`data:${formData.audioContentType || 'audio/mpeg'};base64,${formData.audioData}`} 
+                    <audio
+                      controls
+                      src={`data:${formData.audioContentType || 'audio/mpeg'};base64,${formData.audioData}`}
                       className="w-full h-10 outline-none rounded-lg"
                     />
                   </div>
@@ -619,19 +616,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                 ></textarea>
               </div>
 
-              <div className="pt-2 border-t border-border/50 space-y-4">
-                <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Social Overrides</h4>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">OG Image URL</label>
-                  <input
-                    type="text"
-                    name="ogImage"
-                    value={formData.ogImage}
-                    onChange={handleInputChange}
-                    className="w-full bg-muted/30 border border-border/50 rounded-lg px-3 h-10 text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all"
-                  />
-                </div>
-              </div>
             </div>
           </div>
         </div>

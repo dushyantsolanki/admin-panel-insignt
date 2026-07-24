@@ -10,12 +10,15 @@ import {
 
 export interface ScheduledPost {
   id: string;
+  _id?: string;
   title: string;
   startTime: string; // "HH:mm"
   endTime: string;   // "HH:mm"
   date: string;      // "yyyy-MM-dd"
   status: "draft" | "scheduled" | "published";
   author?: string;
+  category?: string;
+  slug?: string;
 }
 
 interface CalendarState {
@@ -23,7 +26,9 @@ interface CalendarState {
   searchQuery: string;
   statusFilter: "all" | "draft" | "scheduled" | "published";
   posts: ScheduledPost[];
+  isLoading: boolean;
   
+  fetchPostsFromDB: () => Promise<void>;
   goToNextWeek: () => void;
   goToPreviousWeek: () => void;
   goToToday: () => void;
@@ -35,37 +40,51 @@ interface CalendarState {
   getWeekDays: () => Date[];
 }
 
-const mockPosts: ScheduledPost[] = [
-  {
-    id: "1",
-    title: "The Future of AI in Web Development",
-    startTime: "09:00",
-    endTime: "10:00",
-    date: format(new Date(), "yyyy-MM-dd"),
-    status: "scheduled",
-    author: "Admin",
-  },
-  {
-    id: "2",
-    title: "Mastering React Server Components",
-    startTime: "14:00",
-    endTime: "15:30",
-    date: format(addDays(new Date(), 1), "yyyy-MM-dd"),
-    status: "draft",
-    author: "John Doe",
-  },
-];
-
-function getDayOfWeek(date: Date): number {
-  const day = getDay(date);
-  return day === 0 ? 6 : day - 1; // 0 is Monday, 6 is Sunday
-}
-
 export const useCalendarStore = create<CalendarState>((set, get) => ({
   currentWeekStart: startOfWeek(new Date(), { weekStartsOn: 1 }),
   searchQuery: "",
   statusFilter: "all",
-  posts: mockPosts,
+  posts: [],
+  isLoading: true,
+
+  fetchPostsFromDB: async () => {
+    set({ isLoading: true });
+    try {
+      const res = await fetch("/api/posts?limit=500");
+      const json = await res.json();
+      if (json.posts && Array.isArray(json.posts)) {
+        const mappedPosts: ScheduledPost[] = json.posts.map((p: any) => {
+          const rawDate = p.createdAt || p.publishedAt || p.date || new Date().toISOString();
+          const d = new Date(rawDate);
+          const validDate = isNaN(d.getTime()) ? new Date() : d;
+          const dateStr = format(validDate, "yyyy-MM-dd");
+          const startTimeStr = format(validDate, "HH:mm");
+          const endD = new Date(validDate.getTime() + 60 * 60 * 1000);
+          const endTimeStr = format(endD, "HH:mm");
+
+          return {
+            id: p._id || p.id,
+            _id: p._id || p.id,
+            title: p.title || "Untitled Post",
+            startTime: startTimeStr,
+            endTime: endTimeStr,
+            date: dateStr,
+            status: (p.status === "published" || p.status === "scheduled" || p.status === "draft") ? p.status : "published",
+            author: typeof p.author === "object" ? p.author?.name || "Admin" : "Admin",
+            category: typeof p.category === "object" ? p.category?.name || "General" : "General",
+            slug: p.slug || "",
+          };
+        });
+
+        set({ posts: mappedPosts, isLoading: false });
+      } else {
+        set({ isLoading: false });
+      }
+    } catch (err) {
+      console.error("Failed fetching calendar posts from DB:", err);
+      set({ isLoading: false });
+    }
+  },
 
   goToNextWeek: () =>
     set((state) => ({
@@ -93,7 +112,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
   addPost: (postData) => {
     const newPost: ScheduledPost = {
       ...postData,
-      id: Math.random().toString(36).substr(2, 9),
+      id: postData._id || Math.random().toString(36).substr(2, 9),
     };
     set((state) => ({ posts: [...state.posts, newPost] }));
   },
@@ -104,15 +123,19 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
     const endDate = addDays(startDate, 7);
     
     let filteredPosts = state.posts.filter((post) => {
-      const postDate = new Date(post.date);
+      const postDate = new Date(post.date + "T00:00:00");
       return postDate >= startDate && postDate < endDate;
     });
 
     if (state.searchQuery) {
       const query = state.searchQuery.toLowerCase();
-      filteredPosts = filteredPosts.filter((post) =>
-        post.title.toLowerCase().includes(query)
-      );
+      filteredPosts = filteredPosts.filter((post) => {
+        const inTitle = (post.title || "").toLowerCase().includes(query);
+        const inAuthor = (post.author || "").toLowerCase().includes(query);
+        const inCategory = (post.category || "").toLowerCase().includes(query);
+        const inStatus = (post.status || "").toLowerCase().includes(query);
+        return inTitle || inAuthor || inCategory || inStatus;
+      });
     }
 
     if (state.statusFilter !== "all") {
