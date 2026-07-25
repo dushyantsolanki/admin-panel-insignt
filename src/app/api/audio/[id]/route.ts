@@ -9,7 +9,7 @@ export async function GET(
 ) {
   try {
     await connectDB();
-    
+
     const { id } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {

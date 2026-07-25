@@ -342,19 +342,6 @@ export default function AiPipelinePage() {
                   required
                 />
               </div>
-
-              <div className="grid gap-1.5">
-                <Label htmlFor="category" className="text-xs font-semibold text-foreground">
-                  Category
-                </Label>
-                <Input
-                  id="category"
-                  placeholder="E.g. Technology, Sports, Business"
-                  value={categoryInput}
-                  onChange={(e) => setCategoryInput(e.target.value)}
-                  className="h-9 text-sm bg-muted/20 border-border/60"
-                />
-              </div>
             </div>
 
             <DialogFooter className="border-t px-4 py-3 sm:px-6 sm:py-4 flex flex-col sm:flex-row gap-2">

@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     await connectDB();
-    const { id, isHero, isFeatured } = await req.json();
+    const { id, isHero, isFeatured, starred } = await req.json();
 
     if (!id) {
       return NextResponse.json({ error: "Post ID is required" }, { status: 400 });
@@ -79,6 +79,7 @@ export async function PUT(req: NextRequest) {
     const updateData: any = {};
     if (isHero !== undefined) updateData.isHero = isHero;
     if (isFeatured !== undefined) updateData.isFeatured = isFeatured;
+    if (starred !== undefined) updateData.starred = starred;
 
     const updatedPost = await Post.findByIdAndUpdate(
       id,

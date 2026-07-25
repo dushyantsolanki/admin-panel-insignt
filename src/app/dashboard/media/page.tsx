@@ -3,27 +3,36 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, LayoutGrid, List, ArrowLeft } from "lucide-react";
+import { Search, Plus, LayoutGrid, List, ArrowLeft, Upload } from "lucide-react";
 import { MediaStorageCards } from "@/components/dashboard/media-storage-cards";
 import { MediaList } from "@/components/dashboard/media-list";
-import type { MediaType } from "@/mock-data/media";
+import { UploadHubModal } from "@/components/dashboard/media/upload-hub-modal";
 
 export default function MediaPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [activeFilter, setActiveFilter] = useState<MediaType | null>(null);
+  const [activeFilter, setActiveFilter] = useState<"image" | "video" | "audio" | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [statsData, setStatsData] = useState<any>(null);
 
-  const filterLabel = activeFilter === "image" ? "Images" : activeFilter === "video" ? "Videos" : "All Media";
+  const filterLabel =
+    activeFilter === "image"
+      ? "Images"
+      : activeFilter === "video"
+        ? "Videos"
+        : activeFilter === "audio"
+          ? "Audio Files"
+          : "All Media";
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 w-full max-w-7xl mx-auto h-full overflow-y-auto">
-
       {/* Header section */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Media Library</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Manage your blog images and video links directly.
+            Manage your blog images, videos, and audio files directly.
           </p>
         </div>
 
@@ -38,8 +47,8 @@ export default function MediaPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button>
-            <Plus className="mr-2 size-4" /> Add Link
+          <Button onClick={() => setIsUploadOpen(true)}>
+            <Plus className="mr-2 size-4" /> Add Media
           </Button>
         </div>
       </div>
@@ -47,7 +56,10 @@ export default function MediaPage() {
       {/* Storage Cards — shown only when no filter is active */}
       {!activeFilter && (
         <div className="flex-none">
-          <MediaStorageCards onFilterSelect={(type) => setActiveFilter(type)} />
+          <MediaStorageCards
+            onFilterSelect={(type) => setActiveFilter(type)}
+            stats={statsData}
+          />
         </div>
       )}
 
@@ -91,8 +103,21 @@ export default function MediaPage() {
 
       {/* Main Media Content */}
       <div className="flex-1 min-h-0">
-        <MediaList viewMode={viewMode} filterType={activeFilter} searchQuery={searchQuery} />
+        <MediaList
+          viewMode={viewMode}
+          filterType={activeFilter}
+          searchQuery={searchQuery}
+          refreshTrigger={refreshTrigger}
+          onStatsLoaded={(stats) => setStatsData(stats)}
+        />
       </div>
+
+      {/* Upload Hub Modal */}
+      <UploadHubModal
+        isOpen={isUploadOpen}
+        onClose={() => setIsUploadOpen(false)}
+        onUploadSuccess={() => setRefreshTrigger((prev) => prev + 1)}
+      />
     </div>
   );
 }

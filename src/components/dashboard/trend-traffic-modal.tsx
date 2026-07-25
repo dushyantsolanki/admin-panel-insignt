@@ -43,8 +43,10 @@ import {
   BarChart3,
   LineChart as LineChartIcon,
   Activity,
+  Zap,
 } from "lucide-react";
 import { Pill, PillIcon } from "@/components/kibo-ui/pill";
+import { TrendingUp } from "../icons";
 
 type ChartType = "area" | "line" | "bar";
 
@@ -138,20 +140,34 @@ export function TrendTrafficModal({
 
         <div className="overflow-y-auto px-4 py-4 sm:px-6">
           {/* Stats Highlight Bar */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="rounded-lg border border-border/50 bg-muted/20 p-3 flex flex-col justify-between">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground">Peak Interest</span>
-              <span className="text-lg font-bold tabular-nums text-foreground mt-1">{chartData.length > 0 ? Math.max(...chartData.map(d => d.traffic)) : 0}%</span>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
+            <div className="rounded-lg border border-border/50 bg-muted/20 p-2.5 sm:p-3 flex flex-col items-center justify-center text-center">
+              <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center justify-center gap-1">
+                <Zap className="size-3 text-muted-foreground shrink-0" />
+                Peak Interest
+              </span>
+              <span className="text-base sm:text-lg font-bold tabular-nums text-foreground mt-1">
+                {chartData.length > 0 ? Math.max(...chartData.map((d) => d.traffic)) : 100}%
+              </span>
             </div>
-            <div className="rounded-lg border border-border/50 bg-muted/20 p-3 flex flex-col justify-between">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground">Traffic Volume</span>
-              <span className="text-lg font-bold tabular-nums text-foreground mt-1">{formatTrafficNumber(topic.trafficCount)}+</span>
+
+            <div className="rounded-lg border border-border/50 bg-muted/20 p-2.5 sm:p-3 flex flex-col items-center justify-center text-center">
+              <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center justify-center gap-1">
+                <Flame className="size-3 text-muted-foreground shrink-0" />
+                Traffic Volume
+              </span>
+              <span className="text-base sm:text-lg font-bold tabular-nums text-foreground mt-1">
+                {formatTrafficNumber(topic.trafficCount)}+
+              </span>
             </div>
-            <div className="rounded-lg border border-border/50 bg-muted/20 p-3 flex flex-col justify-between">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground">Region</span>
-              <span className="text-sm font-semibold text-foreground mt-1 flex items-center gap-1">
-                <Globe className="size-3.5 text-muted-foreground" />
-                {topic.geo}
+
+            <div className="rounded-lg border border-border/50 bg-muted/20 p-2.5 sm:p-3 flex flex-col items-center justify-center text-center">
+              <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center justify-center gap-1">
+                <Globe className="size-3 text-muted-foreground shrink-0" />
+                Region
+              </span>
+              <span className="text-xs sm:text-sm font-semibold text-foreground mt-1 uppercase tracking-wide">
+                {topic.geo || "US"}
               </span>
             </div>
           </div>
@@ -163,12 +179,12 @@ export function TrendTrafficModal({
               <span className="font-semibold text-xs tabular-nums">{formatTrafficNumber(topic.trafficCount)}+</span>
             </Pill>
             {topic.growth && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-0.5">
-                <ArrowUpRight className="size-3" />
+              <span className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-0.5">
+                <TrendingUp className="size-3" />
                 {topic.growth}
               </span>
             )}
-            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+            <span className="text-[10px] font-medium px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20">
               {topic.category}
             </span>
           </div>

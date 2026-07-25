@@ -41,7 +41,9 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    if (status !== "all") {
+    if (status === "starred") {
+      query.starred = true;
+    } else if (status !== "all") {
       query.status = status;
     }
 

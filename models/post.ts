@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
+import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IPost extends Document {
   title: string;
@@ -7,7 +7,7 @@ export interface IPost extends Document {
   excerpt: string;
   category: mongoose.Types.ObjectId;
   author: mongoose.Types.ObjectId;
-  status: 'draft' | 'published' | 'scheduled';
+  status: "draft" | "published" | "scheduled";
   image: string;
   videoUrl?: string;
   audioData?: string; // Base64 encoded audio
@@ -26,6 +26,7 @@ export interface IPost extends Document {
   };
   isHero: boolean;
   isFeatured: boolean;
+  starred: boolean;
   date: Date;
 }
 
@@ -33,19 +34,19 @@ const PostSchema: Schema = new Schema(
   {
     title: { type: String, required: true },
     slug: { type: String, required: true, unique: true, index: true },
-    content: { type: String, required: true }, // Stores HTML content
+    content: { type: String, required: true },
     excerpt: { type: String },
-    category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
-    author: { type: Schema.Types.ObjectId, ref: 'Author', required: true },
+    category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
+    author: { type: Schema.Types.ObjectId, ref: "Author", required: true },
     status: {
       type: String,
-      enum: ['draft', 'published', 'scheduled'],
-      default: 'draft',
+      enum: ["draft", "published", "scheduled"],
+      default: "draft",
     },
-    image: { type: String }, // Featured Image URL
-    videoUrl: { type: String }, // Featured Video URL
-    audioData: { type: String }, // Base64 audio string
-    audioContentType: { type: String }, // e.g. 'audio/mpeg'
+    image: { type: String },
+    videoUrl: { type: String },
+    audioData: { type: String },
+    audioContentType: { type: String },
     readTime: { type: String },
     seo: {
       focusKeyword: { type: String },
@@ -59,43 +60,44 @@ const PostSchema: Schema = new Schema(
     },
     isHero: { type: Boolean, default: false },
     isFeatured: { type: Boolean, default: false },
+    starred: { type: Boolean, default: false },
     date: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
 
 // Middleware to update Author and Category totalPost counts
-PostSchema.post('save', async function (doc) {
+PostSchema.post("save", async function (doc) {
   try {
-    const Author = mongoose.model('Author');
-    const Category = mongoose.model('Category');
+    const Author = mongoose.model("Author");
+    const Category = mongoose.model("Category");
 
     await Promise.all([
       Author.findByIdAndUpdate(doc.author, { $inc: { totalPost: 1 } }),
-      Category.findByIdAndUpdate(doc.category, { $inc: { totalPost: 1 } })
+      Category.findByIdAndUpdate(doc.category, { $inc: { totalPost: 1 } }),
     ]);
   } catch (error) {
-    console.error('Error updating counts after save:', error);
+    console.error("Error updating counts after save:", error);
   }
 });
 
-PostSchema.post('findOneAndDelete', async function (doc) {
+PostSchema.post("findOneAndDelete", async function (doc) {
   if (doc) {
     try {
-      const Author = mongoose.model('Author');
-      const Category = mongoose.model('Category');
+      const Author = mongoose.model("Author");
+      const Category = mongoose.model("Category");
 
       await Promise.all([
         Author.findByIdAndUpdate(doc.author, { $inc: { totalPost: -1 } }),
-        Category.findByIdAndUpdate(doc.category, { $inc: { totalPost: -1 } })
+        Category.findByIdAndUpdate(doc.category, { $inc: { totalPost: -1 } }),
       ]);
     } catch (error) {
-      console.error('Error updating counts after delete:', error);
+      console.error("Error updating counts after delete:", error);
     }
   }
 });
 
-PostSchema.pre('findOneAndUpdate', async function () {
+PostSchema.pre("findOneAndUpdate", async function () {
   try {
     const query = this.getQuery();
     const docToUpdate = await this.model.findOne(query);
@@ -104,15 +106,15 @@ PostSchema.pre('findOneAndUpdate', async function () {
       (this as any)._originalCategory = docToUpdate.category;
     }
   } catch (error) {
-    console.error('Error in pre findOneAndUpdate hook:', error);
+    console.error("Error in pre findOneAndUpdate hook:", error);
   }
 });
 
-PostSchema.post('findOneAndUpdate', async function (doc) {
+PostSchema.post("findOneAndUpdate", async function (doc) {
   if (doc) {
     try {
-      const Author = mongoose.model('Author');
-      const Category = mongoose.model('Category');
+      const Author = mongoose.model("Author");
+      const Category = mongoose.model("Category");
 
       const originalAuthor = (this as any)._originalAuthor;
       const originalCategory = (this as any)._originalCategory;
@@ -133,7 +135,7 @@ PostSchema.post('findOneAndUpdate', async function (doc) {
         await Promise.all(updates);
       }
     } catch (error) {
-      console.error('Error updating counts after update:', error);
+      console.error("Error updating counts after update:", error);
     }
   }
 });
@@ -141,6 +143,6 @@ PostSchema.post('findOneAndUpdate', async function (doc) {
 if (mongoose.models.Post) {
   delete mongoose.models.Post;
 }
-const Post: Model<IPost> = mongoose.model<IPost>('Post', PostSchema);
+const Post: Model<IPost> = mongoose.model<IPost>("Post", PostSchema);
 
 export default Post;

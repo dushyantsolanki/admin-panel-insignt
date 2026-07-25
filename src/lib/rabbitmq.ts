@@ -1,6 +1,6 @@
 import amqp from "amqplib";
 
-// AMQP protocol always runs on port 5672 (even if management UI is on 8080)
+// AMQP protocol / CloudAMQP connection URL
 const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://localhost:5672";
 export const AI_PIPELINE_QUEUE = "ai_blog_generation_queue";
 
@@ -18,10 +18,10 @@ export async function sendToRabbitMQ(
   let channel: any = null;
 
   try {
-    // Attempt connection with a strict timeout so API calls don't hang if RabbitMQ is offline
+    // Attempt connection with timeout (8s to support CloudAMQP SSL/TLS handshake over WAN)
     const connectionPromise = amqp.connect(RABBITMQ_URL);
     const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("RabbitMQ connection timeout (service offline)")), 2000)
+      setTimeout(() => reject(new Error("RabbitMQ / CloudAMQP connection timeout (broker offline or unreachable)")), 8000)
     );
 
     connection = await Promise.race([connectionPromise, timeoutPromise]);
@@ -49,7 +49,7 @@ export async function sendToRabbitMQ(
     return {
       success: false,
       offline: true,
-      error: err.message || "RabbitMQ Docker container is not available or offline",
+      error: err.message || "RabbitMQ / CloudAMQP service is offline or unreachable",
     };
   }
 }

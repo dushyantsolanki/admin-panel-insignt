@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
           offline: true,
           jobId,
           progress: progressDoc,
-          error: "RabbitMQ container is offline. Please start RabbitMQ Docker container to process AI jobs.",
+          error: "RabbitMQ / CloudAMQP service is offline or unreachable. Please check connection parameters.",
         },
         { status: 503 }
       );

@@ -186,7 +186,7 @@ export function AiPipelineTable({
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
-            placeholder="Search topic, category or job ID..."
+            placeholder="Search topic or job ID..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-9 pr-8 h-9 text-xs bg-muted/20 border-border/60"
@@ -239,7 +239,7 @@ export function AiPipelineTable({
           <TableHeader>
             <TableRow className="hover:bg-transparent text-muted-foreground bg-muted/30 border-border/60">
               <TableHead className="h-10 w-[50px] text-xs uppercase tracking-wider font-semibold">#</TableHead>
-              <TableHead className="h-10 text-xs uppercase tracking-wider font-semibold min-w-[220px]">ARTICLE & CATEGORY</TableHead>
+              <TableHead className="h-10 text-xs uppercase tracking-wider font-semibold min-w-[220px]">ARTICLE TOPIC</TableHead>
               <TableHead className="h-10 text-xs uppercase tracking-wider font-semibold w-[130px]">STATUS</TableHead>
               <TableHead className="h-10 text-xs uppercase tracking-wider font-semibold min-w-[200px]">PIPELINE PROGRESS</TableHead>
               <TableHead className="h-10 text-xs uppercase tracking-wider font-semibold w-[160px]">CREATED DATE</TableHead>
@@ -314,7 +314,7 @@ export function AiPipelineTable({
                         {indexNumber}
                       </TableCell>
 
-                      {/* Topic Title, Job ID & Category */}
+                      {/* Topic Title & Job ID */}
                       <TableCell>
                         <div className="flex items-center gap-3 py-1">
                           <div className="relative size-9 shrink-0 overflow-hidden rounded-lg border border-border/50 bg-muted/60 flex items-center justify-center text-muted-foreground/60 shadow-xs">
@@ -328,7 +328,6 @@ export function AiPipelineTable({
                               <span className="text-[10px] font-mono text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded border border-border/40">
                                 {job.jobId}
                               </span>
-                              <CategoryBadge category={job.category || "General"} />
                             </div>
                           </div>
                         </div>
