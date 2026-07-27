@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import AiPipelineProgress from "@/models/ai-pipeline-progress";
+import Author from "@/models/author";
 import { sendToRabbitMQ, AI_PIPELINE_QUEUE } from "@/lib/rabbitmq";
 
 export async function POST(req: NextRequest) {
@@ -10,9 +11,17 @@ export async function POST(req: NextRequest) {
     const topic = (body.topic || "").trim();
     const category = (body.category || "General").trim();
     const keywords = Array.isArray(body.keywords) ? body.keywords : [];
+    let authorId = body.authorId || body.author || null;
 
     if (!topic) {
       return NextResponse.json({ error: "Topic is required for AI generation" }, { status: 400 });
+    }
+
+    if (!authorId) {
+      const defaultAuthor = await Author.findOne({ status: "active" }) || await Author.findOne();
+      if (defaultAuthor) {
+        authorId = defaultAuthor._id.toString();
+      }
     }
 
     const jobId = `job-ai-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
@@ -40,6 +49,7 @@ export async function POST(req: NextRequest) {
       topic,
       category,
       keywords,
+      authorId,
       createdAt: new Date().toISOString(),
     });
 

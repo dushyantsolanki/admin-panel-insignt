@@ -28,6 +28,13 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { gooeyToast } from "goey-toast";
@@ -78,8 +85,26 @@ export default function AiPipelinePage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [topicInput, setTopicInput] = useState("");
   const [categoryInput, setCategoryInput] = useState("Technology");
+  const [authorsList, setAuthorsList] = useState<any[]>([]);
+  const [selectedAuthorId, setSelectedAuthorId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rabbitOfflineWarning, setRabbitOfflineWarning] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchAuthors = async () => {
+      try {
+        const res = await fetch("/api/authors");
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setAuthorsList(data);
+          if (data.length > 0) setSelectedAuthorId(data[0]._id);
+        }
+      } catch (err) {
+        console.error("Failed fetching authors for AI pipeline:", err);
+      }
+    };
+    fetchAuthors();
+  }, []);
 
   // Poll progress from API every 3 seconds
   const fetchProgress = async (showRefreshSpinner = false) => {
@@ -126,6 +151,7 @@ export default function AiPipelinePage() {
         body: JSON.stringify({
           topic: topicInput.trim(),
           category: categoryInput.trim(),
+          authorId: selectedAuthorId,
         }),
       });
 
@@ -341,6 +367,24 @@ export default function AiPipelinePage() {
                   className="h-9 text-sm bg-muted/20 border-border/60"
                   required
                 />
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold text-foreground">
+                  Assign Author
+                </Label>
+                <Select value={selectedAuthorId} onValueChange={setSelectedAuthorId}>
+                  <SelectTrigger className="h-9 text-sm bg-muted/20 border-border/60">
+                    <SelectValue placeholder="Select author for post..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {authorsList.map((auth) => (
+                      <SelectItem key={auth._id} value={auth._id}>
+                        {auth.name} ({auth.role})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

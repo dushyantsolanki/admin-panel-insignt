@@ -144,7 +144,7 @@ export function TrendTrafficModal({
             <div className="rounded-lg border border-border/50 bg-muted/20 p-2.5 sm:p-3 flex flex-col items-center justify-center text-center">
               <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center justify-center gap-1">
                 <Zap className="size-3 text-muted-foreground shrink-0" />
-                Peak Interest
+                Interest
               </span>
               <span className="text-base sm:text-lg font-bold tabular-nums text-foreground mt-1">
                 {chartData.length > 0 ? Math.max(...chartData.map((d) => d.traffic)) : 100}%
@@ -154,7 +154,7 @@ export function TrendTrafficModal({
             <div className="rounded-lg border border-border/50 bg-muted/20 p-2.5 sm:p-3 flex flex-col items-center justify-center text-center">
               <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center justify-center gap-1">
                 <Flame className="size-3 text-muted-foreground shrink-0" />
-                Traffic Volume
+                Traffic
               </span>
               <span className="text-base sm:text-lg font-bold tabular-nums text-foreground mt-1">
                 {formatTrafficNumber(topic.trafficCount)}+

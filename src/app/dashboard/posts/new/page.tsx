@@ -7,6 +7,14 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { calculateReadTime } from "@/lib/utils";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { MediaSelectCombobox } from "@/components/dashboard/media-select-combobox";
+import {
   type Editor,
   type JSONContent,
   EditorProvider,
@@ -60,6 +68,7 @@ function NewPostForm() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [categories, setCategories] = useState<any[]>([]);
   const [authors, setAuthors] = useState<any[]>([]);
+  const [mediaList, setMediaList] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -101,19 +110,22 @@ function NewPostForm() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Fetch categories and authors
+    // Fetch categories, authors, and media items
     const fetchData = async () => {
       try {
-        const [catsRes, authsRes] = await Promise.all([
+        const [catsRes, authsRes, mediaRes] = await Promise.all([
           fetch("/api/categories?all=true"),
-          fetch("/api/authors")
+          fetch("/api/authors"),
+          fetch("/api/media?limit=100")
         ]);
         const catsData = await catsRes.json();
         const auths = await authsRes.json();
+        const mediaData = await mediaRes.json();
 
         const catList = catsData.categories || [];
         setCategories(catList);
         setAuthors(auths);
+        setMediaList(mediaData.media || []);
 
         // Pre-fill from query params if coming from Google Trending Topics
         const paramTitle = searchParams.get("title");
@@ -465,46 +477,53 @@ function NewPostForm() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</label>
-                <select
-                  name="category"
+                <Select
                   value={formData.category}
-                  onChange={handleInputChange}
-                  className="w-full bg-muted/30 border border-border/50 rounded-lg px-3 h-10 text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
+                  onValueChange={(val) => setFormData(prev => ({ ...prev, category: val }))}
                 >
-                  <option value="" disabled>Select Category</option>
-                  {categories.map(cat => (
-                    <option key={cat._id} value={cat._id}>{cat.name}</option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full bg-muted/30 border border-border/50 h-10 text-sm">
+                    <SelectValue placeholder="Select Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(cat => (
+                      <SelectItem key={cat._id} value={cat._id}>{cat.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Author</label>
-                <select
-                  name="author"
+                <Select
                   value={formData.author}
-                  onChange={handleInputChange}
-                  className="w-full bg-muted/30 border border-border/50 rounded-lg px-3 h-10 text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
+                  onValueChange={(val) => setFormData(prev => ({ ...prev, author: val }))}
                 >
-                  <option value="" disabled>Select Author</option>
-                  {authors.map(auth => (
-                    <option key={auth._id} value={auth._id}>{auth.name}</option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full bg-muted/30 border border-border/50 h-10 text-sm">
+                    <SelectValue placeholder="Select Author" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {authors.map(auth => (
+                      <SelectItem key={auth._id} value={auth._id}>{auth.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Status</label>
-                <select
-                  name="status"
+                <Select
                   value={formData.status}
-                  onChange={handleInputChange}
-                  className="w-full bg-muted/30 border border-border/50 rounded-lg px-3 h-10 text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
+                  onValueChange={(val) => setFormData(prev => ({ ...prev, status: val }))}
                 >
-                  <option value="draft">Draft</option>
-                  <option value="published">Published</option>
-                  <option value="scheduled">Scheduled</option>
-                </select>
+                  <SelectTrigger className="w-full bg-muted/30 border border-border/50 h-10 text-sm">
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="scheduled">Scheduled</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex flex-col gap-3 py-2">
@@ -541,70 +560,40 @@ function NewPostForm() {
             </div>
           </div>
 
-          <div className="bg-card border rounded-xl p-6 space-y-4 shadow-sm">
+          <div className="bg-card border rounded-xl p-6 space-y-4 shadow-sm min-w-0 max-w-full overflow-hidden">
             <h3 className="font-semibold text-sm flex items-center gap-2">Featured Media</h3>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Featured Image URL</label>
-                <input
-                  type="url"
-                  name="image"
+            <div className="space-y-4 min-w-0 max-w-full">
+              <div className="space-y-2 min-w-0 max-w-full overflow-hidden">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select Featured Image</label>
+                <MediaSelectCombobox
+                  type="image"
                   value={formData.image}
-                  onChange={handleInputChange}
-                  className="w-full bg-muted/30 border border-border/50 rounded-lg px-3 h-10 text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all"
-                  placeholder="https://images.unsplash.com/..."
+                  onChange={(url) => setFormData(prev => ({ ...prev, image: url }))}
+                  placeholder="Select image from Media Library..."
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Featured Video URL</label>
-                <input
-                  type="url"
-                  name="videoUrl"
+
+              <div className="space-y-2 min-w-0 max-w-full overflow-hidden">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select Featured Video</label>
+                <MediaSelectCombobox
+                  type="video"
                   value={formData.videoUrl}
-                  onChange={handleInputChange}
-                  className="w-full bg-muted/30 border border-border/50 rounded-lg px-3 h-10 text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all"
-                  placeholder="https://youtube.com/watch?v=..."
+                  onChange={(url) => setFormData(prev => ({ ...prev, videoUrl: url }))}
+                  placeholder="Select video from Media Library..."
                 />
               </div>
-              <div className="space-y-3">
+
+              <div className="space-y-3 min-w-0 max-w-full overflow-hidden">
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  <Headphones className="w-4 h-4 text-primary" /> Audio Voice (Max 15MB)
+                  <Headphones className="w-4 h-4 text-primary" /> Audio Voice Track
                 </label>
 
-                {!formData.audioData ? (
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border/50 rounded-xl bg-muted/10 hover:bg-muted/30 transition-all cursor-pointer group">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
-                      <div className="w-10 h-10 mb-3 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Upload className="w-5 h-5 text-primary" />
-                      </div>
-                      <p className="mb-1 text-sm text-muted-foreground"><span className="font-semibold text-foreground">Click to upload</span> your audio</p>
-                      <p className="text-xs text-muted-foreground/70">MP3, WAV, OGG (MAX. 15MB)</p>
-                    </div>
-                    <input type="file" accept="audio/*" onChange={handleAudioUpload} className="hidden" />
-                  </label>
-                ) : (
-                  <div className="relative flex flex-col gap-3 p-4 rounded-xl border border-primary/20 bg-primary/5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                        <span className="text-sm font-medium text-foreground">Audio Track Ready</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, audioData: "", audioContentType: "" })}
-                        className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors group"
-                        title="Remove audio"
-                      >
-                        <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                      </button>
-                    </div>
-                    <audio
-                      controls
-                      src={`data:${formData.audioContentType || 'audio/mpeg'};base64,${formData.audioData}`}
-                      className="w-full h-10 outline-none rounded-lg"
-                    />
-                  </div>
-                )}
+                <MediaSelectCombobox
+                  type="audio"
+                  value={formData.audioData}
+                  onChange={(url) => setFormData(prev => ({ ...prev, audioData: url, audioContentType: "audio/mpeg" }))}
+                  placeholder="Select audio track from Media Library..."
+                />
               </div>
             </div>
           </div>

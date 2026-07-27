@@ -149,16 +149,20 @@ export async function POST(req: NextRequest) {
 
     const data = await req.json();
 
-
-
     // 3. Auto-generate excerpt if missing
     const text = (data.content || "").replace(/<[^>]*>/g, " ");
     const excerpt = data.excerpt || text.substring(0, 160) + "...";
 
-    // 4. Create post with enforced author ID
+    // 4. Resolve author ID string
+    let resolvedAuthor = data.author || decoded.userId;
+    if (!resolvedAuthor) {
+      const defaultAuthor = await Author.findOne({ status: "active" }) || await Author.findOne();
+      if (defaultAuthor) resolvedAuthor = defaultAuthor._id;
+    }
+
     const newPost = new Post({
       ...data,
-      author: decoded.userId, // Force author attribution to the authenticated user
+      author: resolvedAuthor,
       excerpt,
       views: 0,
       date: data.date || new Date(),

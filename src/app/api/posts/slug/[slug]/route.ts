@@ -17,7 +17,6 @@ export async function GET(
     const { slug } = await params;
 
     const post = await Post.findOne({ slug })
-      .select('-audioData')
       .populate("author", "name avatar bio role")
       .populate("category", "name slug color");
 
