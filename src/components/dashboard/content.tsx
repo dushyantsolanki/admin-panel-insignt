@@ -19,7 +19,7 @@ function WelcomeSection() {
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
-          Welcome Back, {user?.name?.split(' ')?.map((name) => name[0].toUpperCase())}!  👋
+          Welcome Back, {user?.name?.split(' ')?.map((name) => name[0]?.toUpperCase())}!  👋
 
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">
