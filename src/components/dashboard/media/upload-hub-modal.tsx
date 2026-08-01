@@ -307,81 +307,118 @@ export function UploadHubModal({
 
           {/* Queue List */}
           {fileQueue.length > 0 && (
-            <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Upload Queue ({fileQueue.length} files)
-              </span>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  File Upload Queue ({fileQueue.length})
+                </span>
+                {fileQueue.length > 1 && !isUploading && (
+                  <button
+                    type="button"
+                    onClick={() => setFileQueue([])}
+                    className="text-[11px] text-muted-foreground hover:text-rose-500 transition-colors"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
                 {fileQueue.map((item) => (
                   <div
                     key={item.id}
-                    className="p-3 rounded-lg border border-border/60 bg-card flex items-center justify-between gap-3 text-xs"
+                    className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/50 backdrop-blur-md shadow-xs space-y-2.5 transition-all hover:border-slate-300 dark:hover:border-slate-700"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      {item.previewUrl ? (
-                        <img
-                          src={item.previewUrl}
-                          alt={item.name}
-                          className="w-9 h-9 rounded object-cover border border-border/50 shrink-0"
-                        />
-                      ) : (
-                        <div className="w-9 h-9 rounded bg-muted flex items-center justify-center shrink-0 border border-border/50">
-                          {item.type === "video" ? (
-                            <FileVideo className="size-4 text-purple-500" />
-                          ) : item.type === "audio" ? (
-                            <Music className="size-4 text-emerald-500" />
-                          ) : (
-                            <FileImage className="size-4 text-blue-500" />
-                          )}
-                        </div>
-                      )}
+                    {/* Top Row: File Details & Apple Status Badges */}
+                    <div className="flex items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {item.previewUrl ? (
+                          <img
+                            src={item.previewUrl}
+                            alt={item.name}
+                            className="w-10 h-10 rounded-lg object-cover border border-slate-200/80 dark:border-slate-700/80 shrink-0 shadow-xs"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-slate-200/50 dark:bg-slate-800/60 flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-slate-700/80 shadow-xs">
+                            {item.type === "video" ? (
+                              <FileVideo className="size-5 text-purple-500" />
+                            ) : item.type === "audio" ? (
+                              <Music className="size-5 text-emerald-500" />
+                            ) : (
+                              <FileImage className="size-5 text-blue-500" />
+                            )}
+                          </div>
+                        )}
 
-                      <div className="min-w-0">
-                        <h4 className="font-semibold text-foreground truncate max-w-[200px] sm:max-w-[300px]">
-                          {item.name}
-                        </h4>
-                        <div className="text-[10px] text-muted-foreground flex items-center gap-2">
-                          <span>{item.sizeMB}</span>
-                          <span>•</span>
-                          <span className="uppercase font-mono">{item.type}</span>
-                          {item.status === "uploading" && (
-                            <>
-                              <span>•</span>
-                              <span className="text-sky-500 font-bold animate-pulse">
-                                {item.progress}%
-                              </span>
-                            </>
-                          )}
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-foreground truncate max-w-[180px] sm:max-w-[280px] text-xs tracking-tight">
+                            {item.name}
+                          </h4>
+                          <div className="text-[11px] text-muted-foreground flex items-center gap-2 mt-0.5 font-medium">
+                            <span>{item.sizeMB}</span>
+                            <span>•</span>
+                            <span className="uppercase text-[10px] font-semibold tracking-wider text-slate-500 dark:text-slate-400">
+                              {item.type}
+                            </span>
+                          </div>
                         </div>
+                      </div>
+
+                      {/* Right Apple Status Badges */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {item.status === "completed" && (
+                          <span className="text-[#34C759] bg-[#34C759]/10 border border-[#34C759]/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 text-[11px] font-semibold">
+                            <CheckCircle2 className="size-3.5" /> Uploaded
+                          </span>
+                        )}
+
+                        {item.status === "error" && (
+                          <span
+                            className="text-[#FF3B30] bg-[#FF3B30]/10 border border-[#FF3B30]/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 text-[11px] font-semibold"
+                            title={item.errorMsg}
+                          >
+                            <AlertCircle className="size-3.5" /> Failed
+                          </span>
+                        )}
+
+                        {item.status === "uploading" && (
+                          <div className="flex items-center gap-1.5 bg-[#007AFF]/10 border border-[#007AFF]/20 px-2.5 py-0.5 rounded-full text-[#007AFF] text-[11px] font-semibold">
+                            <Loader2 className="size-3.5 animate-spin" />
+                            <span>{item.progress}%</span>
+                          </div>
+                        )}
+
+                        {item.status === "queued" && (
+                          <span className="text-slate-500 bg-slate-200/50 dark:bg-slate-800/60 border border-slate-300/60 dark:border-slate-700/60 px-2.5 py-0.5 rounded-full text-[11px] font-semibold">
+                            Queued
+                          </span>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => removeQueueItem(item.id)}
+                          disabled={isUploading}
+                          className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-slate-200/60 dark:hover:bg-slate-800/60 transition-colors disabled:opacity-50"
+                        >
+                          <X className="size-4" />
+                        </button>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      {item.status === "completed" && (
-                        <span className="text-emerald-500 flex items-center gap-1 font-bold">
-                          <CheckCircle2 className="size-4" /> Uploaded
-                        </span>
-                      )}
-
-                      {item.status === "error" && (
-                        <span className="text-rose-500 flex items-center gap-1 font-bold" title={item.errorMsg}>
-                          <AlertCircle className="size-4" /> Failed
-                        </span>
-                      )}
-
-                      {item.status === "uploading" && (
-                        <Loader2 className="size-4 animate-spin text-sky-500" />
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={() => removeQueueItem(item.id)}
-                        disabled={isUploading}
-                        className="p-1 rounded text-muted-foreground hover:text-foreground"
-                      >
-                        <X className="size-4" />
-                      </button>
+                    {/* Authentic Apple Progress Bar */}
+                    <div className="relative w-full h-1.5 rounded-full bg-slate-200/70 dark:bg-slate-800/70 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+                          item.status === "completed"
+                            ? "bg-[#34C759]"
+                            : item.status === "error"
+                            ? "bg-[#FF3B30]"
+                            : item.status === "uploading"
+                            ? "bg-[#007AFF] shadow-[0_0_8px_rgba(0,122,255,0.5)]"
+                            : "bg-transparent"
+                        }`}
+                        style={{ width: `${item.status === "completed" ? 100 : item.progress}%` }}
+                      />
                     </div>
                   </div>
                 ))}
