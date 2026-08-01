@@ -5,7 +5,6 @@ import Author from "@/models/author";
 import Category from "@/models/category";
 import AnalyticsEvent from "@/models/analytics";
 import { verifyToken } from "@/lib/jwt";
-
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
@@ -34,8 +33,7 @@ export async function GET(req: NextRequest) {
       const categoryIds = matchingCategories.map((c: any) => c._id);
 
       query.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { excerpt: { $regex: search, $options: "i" } },
+        { $text: { $search: search } },
         { author: { $in: authorIds } },
         { category: { $in: categoryIds } },
       ];
@@ -70,8 +68,11 @@ export async function GET(req: NextRequest) {
       query.author = authorId;
     }
 
-    // Build sort
     let sortQuery: any = { createdAt: -1 };
+    if (search) {
+      sortQuery = { score: { $meta: "textScore" } };
+    }
+    
     if (sort === "trending") {
       sortQuery = { views: -1 };
     } else if (sort === "oldest") {
@@ -81,7 +82,12 @@ export async function GET(req: NextRequest) {
     const totalPosts = await Post.countDocuments(query);
     const totalPages = Math.ceil(totalPosts / limit);
 
-    const posts = await Post.find(query)
+    let dbQuery = Post.find(query);
+    if (search) {
+      dbQuery = dbQuery.select({ score: { $meta: "textScore" } });
+    }
+
+    const posts = await dbQuery
       .populate("author", "name avatar")
       .populate("category", "name color")
       .sort(sortQuery)
@@ -169,6 +175,7 @@ export async function POST(req: NextRequest) {
     });
 
     await newPost.save();
+    
     return NextResponse.json(newPost, { status: 201 });
   } catch (error: any) {
     if (error.code === 11000) {

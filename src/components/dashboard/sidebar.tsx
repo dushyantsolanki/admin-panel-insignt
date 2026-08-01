@@ -65,7 +65,7 @@ export function DashboardSidebar(
               <span className="text-sm font-bold">I</span>
             </div>
             <span className="font-semibold text-sidebar-foreground truncate group-data-[collapsible=icon]:hidden">
-              Xenon
+              InFixe
             </span>
           </div>
         </div>

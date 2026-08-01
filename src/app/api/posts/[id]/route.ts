@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 // Force HMR reload
 import connectDB from "@/lib/db";
 import Post from "@/models/post";
-
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

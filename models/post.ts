@@ -10,6 +10,8 @@ export interface IPost extends Document {
   status: "draft" | "published" | "scheduled";
   image: string;
   videoUrl?: string;
+  youtubeUrl?: string;
+  showYoutubeVideo: boolean;
   audioData?: string; // Base64 encoded audio
   audioContentType?: string; // MIME type
   views: number;
@@ -45,6 +47,8 @@ const PostSchema: Schema = new Schema(
     },
     image: { type: String },
     videoUrl: { type: String },
+    youtubeUrl: { type: String },
+    showYoutubeVideo: { type: Boolean, default: false },
     audioData: { type: String },
     audioContentType: { type: String },
     readTime: { type: String },
@@ -64,6 +68,11 @@ const PostSchema: Schema = new Schema(
     date: { type: Date, default: Date.now },
   },
   { timestamps: true }
+);
+
+PostSchema.index(
+  { title: "text", excerpt: "text", content: "text" },
+  { weights: { title: 3, excerpt: 2, content: 1 } }
 );
 
 // Middleware to update Author and Category totalPost counts

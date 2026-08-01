@@ -78,6 +78,8 @@ function NewPostForm() {
     status: "draft",
     image: "",
     videoUrl: "",
+    youtubeUrl: "",
+    showYoutubeVideo: false,
     audioData: "",
     audioContentType: "",
     focusKeyword: "",
@@ -392,6 +394,32 @@ function NewPostForm() {
                   placeholder="manual-slug-here"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">YouTube Embed URL</label>
+              <input
+                type="text"
+                name="youtubeUrl"
+                value={formData.youtubeUrl}
+                onChange={handleInputChange}
+                className="w-full bg-muted/30 border border-border/50 rounded-lg px-3 h-10 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all font-semibold"
+                placeholder="https://www.youtube.com/watch?v=..."
+              />
+            </div>
+
+            <div className="flex items-center gap-2 py-1">
+              <input
+                type="checkbox"
+                id="showYoutubeVideo"
+                name="showYoutubeVideo"
+                checked={formData.showYoutubeVideo}
+                onChange={(e) => handleCheckboxChange("showYoutubeVideo", e.target.checked)}
+                className="size-4 rounded border-border/50 text-primary focus:ring-primary/20 cursor-pointer"
+              />
+              <label htmlFor="showYoutubeVideo" className="text-xs font-bold uppercase tracking-wider text-muted-foreground cursor-pointer">
+                Display YouTube Video as Hero Cover
+              </label>
             </div>
           </div>
 
