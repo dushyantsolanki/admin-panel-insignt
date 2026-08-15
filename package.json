@@ -51,6 +51,7 @@
     "lowlight": "^3.3.0",
     "lucide-react": "^1.8.0",
     "maplibre-gl": "^5.24.0",
+    "moment-timezone": "^0.6.3",
     "mongoose": "^9.4.1",
     "motion": "^12.42.2",
     "next": "16.2.2",

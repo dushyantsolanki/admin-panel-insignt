@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import AnalyticsEvent from "@/models/analytics";
 import Post from "@/models/post";
+import moment from "moment-timezone";
 
 // Simple User Agent parser utility
 function parseUserAgent(ua: string) {
@@ -111,12 +112,11 @@ export async function GET(req: NextRequest) {
     const popularLimit = Number(searchParams.get("popularLimit") || "5");
     const popularSearch = searchParams.get("popularSearch") || "";
 
-    const now = new Date();
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(now.getDate() - 30);
+    const TIMEZONE = "Asia/Kolkata";
+    const now = moment().tz(TIMEZONE);
 
-    const sixtyDaysAgo = new Date();
-    sixtyDaysAgo.setDate(now.getDate() - 60);
+    const thirtyDaysAgo = now.clone().subtract(30, 'days').toDate();
+    const sixtyDaysAgo = now.clone().subtract(60, 'days').toDate();
 
     // 1. Calculate stats cards data
     // Total & Monthly posts
@@ -175,15 +175,13 @@ export async function GET(req: NextRequest) {
 
     // 2. Performance chart data (daily pageviews)
     const daysLimit = period === "30d" ? 30 : 7;
-    const chartStartDate = new Date();
-    chartStartDate.setDate(now.getDate() - daysLimit + 1);
-    chartStartDate.setHours(0, 0, 0, 0);
+    const chartStartDate = now.clone().subtract(daysLimit - 1, 'days').startOf('day').toDate();
 
     const dailyViewsAndVisitors = await AnalyticsEvent.aggregate([
       { $match: { timestamp: { $gte: chartStartDate } } },
       {
         $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp", timezone: "Asia/Kolkata" } },
           views: { $sum: 1 },
           visitors: { $addToSet: "$visitorId" }
         }
@@ -197,25 +195,21 @@ export async function GET(req: NextRequest) {
     });
 
     const chartData = [];
-    const dayNamesShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     for (let i = 0; i < daysLimit; i++) {
-      const d = new Date(chartStartDate);
-      d.setDate(chartStartDate.getDate() + i);
-      const dateStr = d.toISOString().split("T")[0];
+      const d = moment(chartStartDate).tz(TIMEZONE).add(i, 'days');
+      const dateStr = d.format("YYYY-MM-DD");
       const metrics = dailyMetricsMap.get(dateStr) || { views: 0, visitors: 0 };
 
       if (daysLimit === 7) {
         chartData.push({
-          day: dayNamesShort[d.getDay()],
+          day: d.format("ddd"),
           views: metrics.views,
           visitors: metrics.visitors
         });
       } else {
-        const month = d.toLocaleDateString("en-US", { month: "short" });
-        const dayNum = d.getDate();
         chartData.push({
-          day: `${month} ${dayNum}`,
+          day: d.format("MMM D"),
           views: metrics.views,
           visitors: metrics.visitors
         });

@@ -2,17 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import AnalyticsEvent from "@/models/analytics";
 import { parseAnalyticsDates } from "@/lib/analytics-utils";
+import moment from "moment-timezone";
 
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
     const { currentStart, currentEnd, daysDifference } = parseAnalyticsDates(req.url);
 
+    const TIMEZONE = "Asia/Kolkata";
+
     const dailyViewsAndVisitors = await AnalyticsEvent.aggregate([
       { $match: { timestamp: { $gte: currentStart, $lte: currentEnd } } },
       {
         $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp", timezone: TIMEZONE } },
           views: { $sum: 1 },
           visitors: { $addToSet: "$visitorId" }
         }
@@ -26,25 +29,21 @@ export async function GET(req: NextRequest) {
     });
 
     const chartData = [];
-    const dayNamesShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     for (let i = 0; i < daysDifference; i++) {
-      const d = new Date(currentStart);
-      d.setDate(currentStart.getDate() + i);
-      const dateStr = d.toISOString().split("T")[0];
+      const d = moment(currentStart).tz(TIMEZONE).add(i, 'days');
+      const dateStr = d.format("YYYY-MM-DD");
       const metrics = dailyMetricsMap.get(dateStr) || { views: 0, visitors: 0 };
 
       if (daysDifference <= 7) {
         chartData.push({
-          day: dayNamesShort[d.getDay()],
+          day: d.format("ddd"),
           views: metrics.views,
           visitors: metrics.visitors
         });
       } else {
-        const month = d.toLocaleDateString("en-US", { month: "short" });
-        const dayNum = d.getDate();
         chartData.push({
-          day: `${month} ${dayNum}`,
+          day: d.format("MMM D"),
           views: metrics.views,
           visitors: metrics.visitors
         });
