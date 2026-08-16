@@ -64,9 +64,9 @@ export function DashboardSidebar(
             <div className="size-8 rounded-md bg-primary flex items-center justify-center text-primary-foreground shrink-0">
               <span className="text-sm font-bold">I</span>
             </div>
-            <span className="font-bold tracking-tight text-white/90 text-lg flex items-center truncate group-data-[collapsible=icon]:hidden">
-              INFIXE
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 ml-0.5 mt-2"></span>
+            <span className="font-bold tracking-tight text-lg flex items-center truncate group-data-[collapsible=icon]:hidden">
+              <span className="bg-gradient-to-r from-[#FF9933] via-gray-300 dark:via-white to-[#138808] text-transparent bg-clip-text">INFIXE</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#000080] ml-0.5 mt-2"></span>
             </span>
           </div>
         </div>

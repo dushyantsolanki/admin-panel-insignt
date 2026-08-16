@@ -141,7 +141,9 @@ export function getNewsletterTemplate(content: string, unsubscribeUrl: string): 
       <body>
         <div class="container">
           <div class="header">
-            <h1>InFixe</h1>
+            <h1>
+              <span style="color: #FF9933;">IN</span><span style="color: #ffffff;">FI</span><span style="color: #138808;">XE</span>
+            </h1>
           </div>
           <div class="content">
             ${content}
